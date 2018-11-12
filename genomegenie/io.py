@@ -48,10 +48,12 @@ def get_header(vf, drop_cols=["Description"]):
 
 ## 1: populate as struct -> flatten
 def to_arrow(vrec_batch, cols):
-    """Convert `VariantRecord` batches to Arrow `RecordBatch`s
+    """Convert `VariantRecord` batches to Arrow `RecordBatch`es
 
     vrec_batch -- VariantRecord batch or VariantRecord batch iterator
     cols       -- Record column spec (as returned by get_vcf_cols(..))
+
+    returns list of `RecordBatch`es
 
     """
     props1 = OrderedDict(
@@ -75,10 +77,12 @@ to_arrow1 = to_arrow
 
 ## 2: double loop: iterate over records, and columns
 def to_arrow2(vrec_batch, cols):
-    """Convert `VariantRecord` batches to Arrow `RecordBatch`s
+    """Convert `VariantRecord` batches to Arrow `RecordBatch`es
 
     vrec_batch -- VariantRecord batch or VariantRecord batch iterator
     cols       -- Record column spec (as returned by get_vcf_cols(..))
+
+    returns list of `RecordBatch`es
 
     """
     props = ["alts" if c == "ALT" else c for c in cols]
