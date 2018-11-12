@@ -17,6 +17,8 @@ import pyarrow.parquet as pq
 import numpy as np
 import pandas as pd
 
+from pysam import VariantFile
+
 from genomegenie.schemas import hdr_t, get_vcf_cols
 
 
@@ -47,11 +49,12 @@ def get_header(vf, drop_cols=["Description"]):
 # performs marginally better than the other.
 
 ## 1: populate as struct -> flatten
-def to_arrow(vrec_batch, cols):
+def to_arrow(vfname, batchparams, cols):
     """Convert `VariantRecord` batches to Arrow `RecordBatch`es
 
-    vrec_batch -- VariantRecord batch or VariantRecord batch iterator
-    cols       -- Record column spec (as returned by get_vcf_cols(..))
+    vfname      -- Variant file name to be opened with `VariantFile`
+    batchparams -- Parameters to get VariantRecord batch iterator
+    cols        -- Record column spec (as returned by get_vcf_cols(..))
 
     returns list of `RecordBatch`es
 
@@ -62,12 +65,14 @@ def to_arrow(vrec_batch, cols):
         if not c.startswith("INFO")
     )
     batch = []
-    for vrec in vrec_batch:
+    vf = VariantFile(vfname, mode="r", threads=4)
+    for vrec in vf.fetch(*batchparams):
         row = OrderedDict((k, getattr(vrec, v)) for k, v in props1.items())
         # vrec.filter: [('NAME', <pysam.libcbcf.VariantHeader>)]
         row["FILTER"] = [i[0] for i in row["FILTER"].items()]
         row.update((f"INFO_{k}", v) for k, v in vrec.info.items())
         batch.append(row)
+    vf.close()
     # pdb.set_trace()
     batch = pa.array(batch, type=pa.struct(cols)).flatten()
     return pa.RecordBatch.from_arrays(batch, pa.schema(cols))
