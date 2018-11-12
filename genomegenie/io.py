@@ -100,3 +100,14 @@ def to_arrow2(vrec_batch, cols):
     return pa.RecordBatch.from_arrays(
         [pa.array(batch[i], type=cols[c]) for i, c in enumerate(cols)], pa.schema(cols)
     )
+
+
+def to_parquet(pqwriter, batches):
+    """Persist list of `RecordBatch`es to a parquet file
+
+    pqwriter -- parquet output file writer
+    batches  -- list of `RecordBatch`es to persist
+
+    """
+    tbl = pa.Table.from_batches(batches)
+    pqwriter.write_table(tbl, row_group_size=15000)
