@@ -9,13 +9,9 @@
 
 """
 
-from collections import OrderedDict, defaultdict
-import pdb
+from collections import OrderedDict
 
 import pyarrow as pa
-import pyarrow.parquet as pq
-import numpy as np
-import pandas as pd
 
 from pysam import VariantFile
 
@@ -45,10 +41,6 @@ def get_header(vf, drop_cols=["Description"]):
         return (hdrtbl.to_pandas(), samples)
 
 
-# NOTE: A couple of alternate implementations of to_arrow(..); the first
-# performs marginally better than the other.
-
-## 1: populate as struct -> flatten
 def to_arrow(vfname, batchparams, cols):
     """Convert `VariantRecord` batches to Arrow `RecordBatch`es
 
@@ -73,38 +65,11 @@ def to_arrow(vfname, batchparams, cols):
         row.update((f"INFO_{k}", v) for k, v in vrec.info.items())
         batch.append(row)
     vf.close()
-    # pdb.set_trace()
+    # populate as struct -> flatten
     batch = pa.array(batch, type=pa.struct(cols)).flatten()
     return pa.RecordBatch.from_arrays(batch, pa.schema(cols))
 
 to_arrow1 = to_arrow
-
-
-## 2: double loop: iterate over records, and columns
-def to_arrow2(vrec_batch, cols):
-    """Convert `VariantRecord` batches to Arrow `RecordBatch`es
-
-    vrec_batch -- VariantRecord batch or VariantRecord batch iterator
-    cols       -- Record column spec (as returned by get_vcf_cols(..))
-
-    returns list of `RecordBatch`es
-
-    """
-    props = ["alts" if c == "ALT" else c for c in cols]
-    batch = list([] for _ in range(len(cols)))
-    for vrec in vrec_batch:
-        for field, col in zip(props, batch):
-            if field.startswith("INFO"):
-                _, key = field.split("_", 1)
-                col.append(vrec.info.get(key, None))
-            elif field == "FILTER":
-                # vrec.filter: [('NAME', <pysam.libcbcf.VariantHeader>)]
-                col.append([i[0] for i in getattr(vrec, field.lower()).items()])
-            else:
-                col.append(getattr(vrec, field.lower(), None))
-    return pa.RecordBatch.from_arrays(
-        [pa.array(batch[i], type=cols[c]) for i, c in enumerate(cols)], pa.schema(cols)
-    )
 
 
 def to_parquet(pqwriter, batches):
