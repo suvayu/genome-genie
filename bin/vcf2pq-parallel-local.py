@@ -9,16 +9,10 @@ import gc
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-# from dask.distributed import Client
-# import dask.bag as db
-# import dask.delayed as delay
-
 from pysam import VariantFile
 
 from genomegenie.schemas import get_vcf_cols
 from genomegenie.io import get_header, to_arrow, to_parquet
-
-# client = Client("127.0.0.1:8786")
 
 # data files: {20..22},X,Y
 data_t = (
