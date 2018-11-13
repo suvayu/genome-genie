@@ -11,8 +11,8 @@ import pyarrow.parquet as pq
 
 from pysam import VariantFile
 
-from genomegenie.schemas import get_vcf_cols
-from genomegenie.io import get_header, to_arrow, to_parquet
+from genomegenie.schemas import get_vcf_cols, get_header
+from genomegenie.io import to_arrow, to_parquet
 
 # data files: {20..22},X,Y
 data_t = (

@@ -58,3 +58,26 @@ def get_vcf_cols(hdr):
 
     # TODO: convert FORMAT and sample columns
     return _vcf_cols
+
+
+def get_header(vf, drop_cols=["Description"]):
+    """Get header from VariantFile
+
+    vf -- VariantFile
+
+    """
+    header = [
+        dict(Description=rec.value, HeaderType=rec.type)
+        if rec.type is "GENERIC"
+        else dict(rec, HeaderType=rec.type)
+        for rec in vf.header.records
+    ]
+    header = pa.array(header, type=hdr_t).flatten()
+    names = [field.name for field in hdr_t]
+    hdrtbl = pa.Table.from_arrays(header, names)
+    samples = [i for i in vf.header.samples]
+    # TODO: convert FORMAT and sample columns
+    if drop_cols:
+        return (hdrtbl.to_pandas().drop(columns=drop_cols), samples)
+    else:
+        return (hdrtbl.to_pandas(), samples)
