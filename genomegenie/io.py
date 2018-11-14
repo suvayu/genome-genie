@@ -19,6 +19,10 @@ from pysam import VariantFile
 def to_arrow(vfname, batchparams, cols):
     """Convert `VariantRecord` batches to Arrow `RecordBatch`es
 
+    The returned Arrow buffer breaks compatibility with a standard VCF column
+    header: ALT -> ALTS.  This is because `pysam.VariantRecord` does this, and
+    it makes sense.  This also significantly reduces code complexity.
+
     vfname      -- Variant file name to be opened with `VariantFile`
     batchparams -- Parameters to get VariantRecord batch iterator
     cols        -- Record column spec (as returned by get_vcf_cols(..))
@@ -26,15 +30,11 @@ def to_arrow(vfname, batchparams, cols):
     returns list of `RecordBatch`es
 
     """
-    props1 = OrderedDict(
-        (c, "alts" if c == "ALT" else c.lower())
-        for c in cols
-        if not c.startswith("INFO")
-    )
     batch = []
     vf = VariantFile(vfname, mode="r", threads=4)
     for vrec in vf.fetch(*batchparams):
-        row = OrderedDict((k, getattr(vrec, v)) for k, v in props1.items())
+        # break compatibility with VCF file column header: ALT -> ALTS.
+        row = OrderedDict((c, getattr(vrec, c.lower())) for c in cols if not c.startswith("INFO"))
         # vrec.filter: [('NAME', <pysam.libcbcf.VariantHeader>)]
         row["FILTER"] = [i[0] for i in row["FILTER"].items()]
         row.update((f"INFO_{k}", v) for k, v in vrec.info.items())
