@@ -54,9 +54,23 @@ def get_vcf_cols(hdr):
     _vcf_cols.update(
         [(f"INFO_{r.ID}", pa.list_(pa_t_map[r.Type])) for i, r in df2.iterrows()]
     )
-
-    # TODO: convert FORMAT and sample columns
     return _vcf_cols
+
+
+def get_vcf_sample_cols(hdr):
+    df = hdr.query('HeaderType == "FORMAT"')
+    lonely = ["0", "1"]
+    # equivalent: df[df.Number.isin(["0", "1"])]
+    df1 = df.query(f'Number in {lonely}')  # single value
+    df2 = df.query(f'Number not in {lonely}')  # list of values
+
+    # map Type to pyarrow.DataType
+    cols = OrderedDict()
+    cols.update([(f"{r.ID}", pa_t_map[r.Type]) for i, r in df1.iterrows()])
+    cols.update(
+        [(f"{r.ID}", pa.list_(pa_t_map[r.Type])) for i, r in df2.iterrows()]
+    )
+    return cols
 
 
 def get_header(vf, drop_cols=["Description"]):

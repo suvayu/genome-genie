@@ -16,7 +16,7 @@ import pyarrow as pa
 from pysam import VariantFile
 
 
-def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
+def to_arrow(vfname, batchparams, cols, sample_cols, nested_props=("FILTER", "FORMAT")):
     """Convert `VariantRecord` batches to Arrow `RecordBatch`es
 
     The returned Arrow buffer breaks compatibility with a standard VCF column
@@ -44,6 +44,7 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
 
     """
     batch = []
+    cols = OrderedDict()
     vf = VariantFile(vfname, mode="r", threads=4)  # FIXME:
     for vrec in vf.fetch(*batchparams):
         # break compatibility with VCF file column header: ALT -> ALTS.
@@ -57,10 +58,21 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
         # missing INFO_* fields are treated as NULLs (see doc string)
         row.update((f"INFO_{k}", v) for k, v in vrec.info.items())
         batch.append(row)
+
+        # samples
+        cols.update((f"{vrec.chrom}_{vrec.pos}_{fmt}", (list(), dtype))
+                    for fmt, dtype in sample_cols.items())
+        for sample in vrec.samples.items():
+            for fmt, val in sample.items():
+                cols[f"{vrec.chrom}_{vrec.pos}_{fmt}"][0].append(val)
     vf.close()  # FIXME:
     # populate as struct -> flatten
     batch = pa.array(batch, type=pa.struct(cols)).flatten()
-    return pa.RecordBatch.from_arrays(batch, pa.schema(cols))
+    for key in cols:
+        # special case Genotype ("GT")
+        dtype = pa.list_(pa.int8()) if key.endswith("GT") else cols[key][1]
+        cols[key] = pa.array(cols[key], dtype)
+    return pa.RecordBatch.from_arrays(batch, pa.schema(cols)), cols
 
 
 to_arrow1 = to_arrow
