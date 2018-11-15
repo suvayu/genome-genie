@@ -38,10 +38,9 @@ _vcf_cols = OrderedDict(
     ALTS=pa.list_(pa.string()),
     QUAL=pa.int8(),
     FILTER=pa.list_(pa.string()),
+    FORMAT=pa.list_(pa.string()),
     # INFO=pa.NULL,
-    # FORMAT=pa.NULL,
 )
-
 
 def get_vcf_cols(hdr):
     df = hdr.query('HeaderType == "INFO"')

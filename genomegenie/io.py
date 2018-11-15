@@ -16,7 +16,7 @@ import pyarrow as pa
 from pysam import VariantFile
 
 
-def to_arrow(vfname, batchparams, cols):
+def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
     """Convert `VariantRecord` batches to Arrow `RecordBatch`es
 
     The returned Arrow buffer breaks compatibility with a standard VCF column
@@ -44,20 +44,24 @@ def to_arrow(vfname, batchparams, cols):
 
     """
     batch = []
-    vf = VariantFile(vfname, mode="r", threads=4) # FIXME:
+    vf = VariantFile(vfname, mode="r", threads=4)  # FIXME:
     for vrec in vf.fetch(*batchparams):
         # break compatibility with VCF file column header: ALT -> ALTS.
         # INFO_* fields are filtered out as they are handled separately later.
-        row = OrderedDict((c, getattr(vrec, c.lower())) for c in cols if not c.startswith("INFO"))
-        # vrec.filter: [('NAME', <pysam.libcbcf.VariantHeader>)]
-        row["FILTER"] = [i[0] for i in row["FILTER"].items()]
+        row = OrderedDict(
+            (c, getattr(vrec, c.lower())) for c in cols if not c.startswith("INFO")
+        )
+        for prop in nested_props:
+            # vrec.{prop}: [('NAME', <pysam.libcbcf.VariantMetadata>)]
+            row[prop] = [i[0] for i in row[prop].items()]
         # missing INFO_* fields are treated as NULLs (see doc string)
         row.update((f"INFO_{k}", v) for k, v in vrec.info.items())
         batch.append(row)
-    vf.close()                  # FIXME:
+    vf.close()  # FIXME:
     # populate as struct -> flatten
     batch = pa.array(batch, type=pa.struct(cols)).flatten()
     return pa.RecordBatch.from_arrays(batch, pa.schema(cols))
+
 
 to_arrow1 = to_arrow
 
