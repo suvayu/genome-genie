@@ -16,19 +16,19 @@ from genomegenie.io import to_arrow, to_parquet
 
 # data files: {20..22},X,Y
 data_t = (
-    "data/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    "data/1KGP/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
 )
 data_x = (
-    "data/ALL.chrX.phase3_shapeit2_mvncall_integrated_v1b.20130502.genotypes.vcf.gz"
+    "data/1KGP/ALL.chrX.phase3_shapeit2_mvncall_integrated_v1b.20130502.genotypes.vcf.gz"
 )
-data_y = "data/ALL.chrY.phase3_integrated_v1b.20130502.genotypes.vcf.gz"
+data_y = "data/1KGP/ALL.chrY.phase3_integrated_v1b.20130502.genotypes.vcf.gz"
 
 chrom = 20
 vfname = data_t.format(chrom)
 vf = VariantFile(vfname, mode="r", threads=4)
 hdr, samples = get_header(vf)
 vf.close()
-# hdr.to_parquet("data/pq/chr20-header.parquet")
+# hdr.to_parquet("data/1KGP/pq/chr20-header.parquet")
 
 cols = get_vcf_cols(hdr)
 schema = pa.schema(cols)
