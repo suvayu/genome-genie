@@ -40,7 +40,7 @@ loop = asyncio.get_event_loop()
 batchsize = 4  # ncores/2
 tproc, tio = 0, 0  # timing
 pqwriter = pq.ParquetWriter("test.parquet", schema, flavor="spark")
-for i in range(0, 64, batchsize):
+for i in range(0, 316, batchsize):
     with ProcessPoolExecutor(4) as executor:
         t0 = time.process_time()
         tasks = [
@@ -48,7 +48,7 @@ for i in range(0, 64, batchsize):
                 executor,
                 to_arrow,
                 vfname,
-                ("20", j * 1_000_000, (j + 1) * 1_000_000),
+                ("20", j * 200_000, (j + 1) * 200_000),
                 cols,
             )
             for j in range(i, i + batchsize)
