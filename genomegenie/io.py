@@ -15,6 +15,7 @@ import pyarrow as pa
 
 from pysam import VariantFile
 
+from genomegenie.schemas import _simple_vcf_cols
 
 def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
     """Convert `VariantRecord` batches to Arrow `RecordBatch`es
@@ -49,15 +50,29 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
         # break compatibility with VCF file column header: ALT -> ALTS.
         # INFO_* fields are filtered out as they are handled separately later.
         row = OrderedDict(
-            (c, getattr(vrec, c.lower())) for c in cols if not c.startswith("INFO")
+            (c, getattr(vrec, c.lower()))
+            for c in cols if c in _simple_vcf_cols
         )
-        for prop in nested_props:
-            # vrec.{prop}: [('NAME', <pysam.libcbcf.VariantMetadata>)]
-            row[prop] = [i[0] for i in row[prop].items()]
+        # vrec.{prop}: [('<filter>', <pysam.libcbcf.VariantMetadata>)]
+        row.update(
+            (prop, [key for key in getattr(vrec, prop.lower()).keys()])
+            for prop in nested_props
+        )
         # missing INFO_* fields are treated as NULLs (see doc string)
         row.update((f"INFO_{k}", v) for k, v in vrec.info.items())
+        # reverse the layout: fmt in sample -> sample in fmt.  this way
+        # for a given FORMAT field, all samples will be in adjacent blocks.
+        row.update(
+            (f"{fmt}_{sample.name}", (int(sample.phased), *sample.values()[i]))
+            for i, fmt in enumerate(row["FORMAT"])
+            for sample in vrec.samples.values()
+        )
+        # NOTE: indexing above slows the generator expr by a factor of two.
+        # indexing relies on the fixed ordering of FORMAT field values.
         batch.append(row)
     vf.close()  # FIXME:
+    # from pprint import pprint
+    # pprint(batch[-1])
     # populate as struct -> flatten
     batch = pa.array(batch, type=pa.struct(cols)).flatten()
     return pa.RecordBatch.from_arrays(batch, pa.schema(cols))

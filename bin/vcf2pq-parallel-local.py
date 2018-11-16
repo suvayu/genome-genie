@@ -30,7 +30,7 @@ hdr, samples = get_header(vf)
 vf.close()
 # hdr.to_parquet("data/1KGP/pq/chr20-header.parquet")
 
-cols = get_vcf_cols(hdr)
+cols = get_vcf_cols(hdr, samples)
 schema = pa.schema(cols)
 struct = pa.struct(cols)
 

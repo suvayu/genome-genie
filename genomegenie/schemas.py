@@ -28,6 +28,13 @@ pa_t_map = {
     "Float": pa.float32(),
     "String": pa.string(),
     "Flag": pa.bool_(),
+    "GT": pa.list_(pa.int8()),  # special case, as pysam converts from string
+    # array of UnionArrays are not supported
+    # "GT": pa.list_(
+    #     pa.union(
+    #         [pa.field("phased", pa.bool_()), pa.field("allele_idx", pa.int8())], "dense"
+    #     )
+    # ),
 }
 
 _vcf_cols = OrderedDict(
@@ -39,15 +46,17 @@ _vcf_cols = OrderedDict(
     QUAL=pa.int8(),
     FILTER=pa.list_(pa.string()),
     FORMAT=pa.list_(pa.string()),
-    # INFO=pa.NULL,
 )
 
-def get_vcf_cols(hdr):
+_simple_vcf_cols = ["CHROM", "POS", "ID", "REF", "ALTS", "QUAL"]
+
+
+def get_vcf_cols(hdr, samples):
     df = hdr.query('HeaderType == "INFO"')
     lonely = ["0", "1"]
     # equivalent: df[df.Number.isin(["0", "1"])]
-    df1 = df.query(f'Number in {lonely}')  # single value
-    df2 = df.query(f'Number not in {lonely}')  # list of values
+    df1 = df.query(f"Number in {lonely}")  # single value
+    df2 = df.query(f"Number not in {lonely}")  # list of values
 
     # map Type to pyarrow.DataType
     _vcf_cols.update([(f"INFO_{r.ID}", pa_t_map[r.Type]) for i, r in df1.iterrows()])
@@ -55,7 +64,28 @@ def get_vcf_cols(hdr):
         [(f"INFO_{r.ID}", pa.list_(pa_t_map[r.Type])) for i, r in df2.iterrows()]
     )
 
-    # TODO: convert FORMAT and sample columns
+    df = hdr.query('HeaderType == "FORMAT"')
+    df1 = df.query(f"Number in {lonely}")  # single value
+    df2 = df.query(f"Number not in {lonely}")  # list of values
+    _vcf_cols.update(
+        [
+            (f"{r.ID}_{sample}", pa_t_map[r.Type])
+            for i, r in df1.iterrows()
+            for sample in samples
+        ]
+    )
+    _vcf_cols.update(
+        [
+            (f"{r.ID}_{sample}", pa.list_(pa_t_map[r.Type]))
+            for i, r in df2.iterrows()
+            for sample in samples
+        ]
+    )
+    # HACK: override for Genotype ("GT"), because `pysam` converts the string
+    # into values of approriate types: phased (boolean), and values (int)
+    if df1.ID.isin(["GT"]).all():
+        _vcf_cols.update([(f"GT_{sample}", pa_t_map["GT"]) for sample in samples])
+
     return _vcf_cols
 
 
@@ -76,7 +106,6 @@ def get_header(vf, drop_cols=["Description"]):
     names = [field.name for field in hdr_t]
     hdrtbl = pa.Table.from_arrays(header, names)
     samples = [i for i in vf.header.samples]
-    # TODO: convert FORMAT and sample columns
     if drop_cols:
         return (hdrtbl.to_pandas().drop(columns=drop_cols), samples)
     else:
