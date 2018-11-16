@@ -62,7 +62,8 @@ def get_vcf_cols(hdr):
 def get_header(vf, drop_cols=["Description"]):
     """Get header from VariantFile
 
-    vf -- VariantFile
+    vf        -- VariantFile
+    drop_cols -- Columns to drop from the final table
 
     """
     header = [
