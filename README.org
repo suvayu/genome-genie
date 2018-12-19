@@ -8,3 +8,21 @@
 - =numpy=
 - =pandas= (optional)
 - =dask= (optional)
+
+** Job queues with SGE
+*** Concepts
+- command components
+  - subcommands
+  - flags
+  - options with values (values come from the user)
+
+*** Steps
+- command template
+- defaults
+- user provided options
+- merge
+- generate command
+
+
+- calculate resource requirements
+- generate script
