@@ -1,0 +1,8 @@
+$GATKHOME/gatk \
+    --java-options ${javaopts if javaopts else '-Xmx64g'} \
+    Mutect2 \
+    -R ${ref_fasta} \
+    -I ${normal_bam} -normal ${sample_name(normal_bam)} \
+    -O ${pon_out} \
+    --germline-resource ${genomedb} \
+    -L ${exome_bed}

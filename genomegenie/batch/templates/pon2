@@ -1,0 +1,5 @@
+$GATKHOME/gatk \
+    --java-options ${javaopts if javaopts else '-Xmx64g'} \
+    CreateSomaticPanelOfNormals \
+    -vcfs ${lo_normals} \
+    -O ${pon}

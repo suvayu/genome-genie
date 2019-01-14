@@ -1,0 +1,23 @@
+<%!
+    from genomegenie.batch.filters import ungz, vcf2bam, sample_name
+%>
+
+$GATKHOME/gatk \
+    --java-options ${javaopts if javaopts else '-Xmx64g'} \
+    ${'Mutect2' if tumor_bam else 'HaplotypeCaller'} \
+    -R ${ref_fasta} \
+% if tumor_bam:
+    -I ${tumor_bam} -tumor ${sample_name(tumor_bam)} \
+    -I ${normal_bam} -normal ${sample_name(normal_bam)} \
+    --germline-resource ${db} \
+    --panel-of-normals ${pon} \
+% else:
+    -I ${normal_bam} \
+% endif
+    -O ${output} -bamout ${output | ungz,vcf2bam} \
+% if exome_bed:
+    -L ${exome_bed} \
+% endif
+% if nprocs:
+    --native-pair-hmm-threads ${f'{nprocs}'}
+% endif

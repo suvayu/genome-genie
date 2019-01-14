@@ -1,0 +1,20 @@
+% if tumor_bam:
+configureStrelkaSomaticWorkflow.py \
+% else:
+configureStrelkaGermlineWorkflow.py \
+% endif
+    --referenceFasta ${ref_fasta} \
+% if tumor_bam:
+    --tumorBam ${tumor_bam} \
+    --normalBam ${normal_bam} \
+% else:
+    --bam ${normal_bam} \
+% endif
+    --runDir ${output}
+
+pushd ${output}
+
+./runWorkflow.py -m local \
+% if nprocs:
+    -j ${f'{nprocs}'}
+% endif

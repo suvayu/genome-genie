@@ -1,0 +1,1 @@
+freebayes -f ${ref_fasta} ${normal_bam} > ${output}
