@@ -1,20 +1,17 @@
-% if tumor_bam:
+% if tumor_bam is UNDEFINED:
 configureStrelkaSomaticWorkflow.py \
-% else:
-configureStrelkaGermlineWorkflow.py \
-% endif
-    --referenceFasta ${ref_fasta} \
-% if tumor_bam:
     --tumorBam ${tumor_bam} \
     --normalBam ${normal_bam} \
 % else:
+configureStrelkaGermlineWorkflow.py \
     --bam ${normal_bam} \
 % endif
+    --referenceFasta ${ref_fasta} \
     --runDir ${output}
 
 pushd ${output}
 
 ./runWorkflow.py -m local \
-% if nprocs:
+% if nprocs is not UNDEFINED:
     -j ${f'{nprocs}'}
 % endif

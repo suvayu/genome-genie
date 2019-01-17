@@ -6,44 +6,96 @@
 
 """
 
-from abc import ABC, abstractmethod
+
+from string import Template
+from textwrap import dedent
+
+from distributed.utils import parse_bytes
+
+from genomegenie.batch.factory import command
 
 
-class BatchJob(ABC):
-    def __init__(self, cluster):
-        # job_header abd partly the env comes from cluster,
-        # cmd specific env and cmd depends on the specific job
-        self.job_header = cluster.job_header
-        # fallback to env_header from `JobQueueCluster`
-        self.env_header = getattr(cluster, "env_header", cluster._env_header)
-        self.script_template = cluster._script_template
+class Pipeline(object):
+    pass
+
+
+class BatchJob(object):
+    """Wrapper to generate, submit, and manage batch jobs.
+
+    cluster -- JobQueueCluster instance
+
+    resources -- dict: with resource requirements
+
+                 
+
+
+    options -- dict: keys are templates, values are options
+               Typically options are dictionaries, except for "module".
+
+               >>> {
+                   'module': ['foo', 'bar', 'baz'],
+                   'mytemplate': {'key1': 'val1', 'key2': 'val2', 'nprocs': 4},
+                   'sge': {'queue': 'name', 'log_directory': 'dirname',
+                           'walltime': 'runtime estimate',
+                           'cputime': 'per proc cputime estimate',
+                           'memory': 'total memory requirement'}
+               }
+
+               time spec: hh:mm:ss
+               memory spec: 100MB, 4 GB, etc
+
+    """
+
+    _script_template = Template(
+        dedent(
+            """
+    #!/bin/bash
+
+    # job options
+    $job_header
+
+    # setup
+    $setup
+
+    # job command
+    $job_cmd
+    """
+        )
+    )
+
+    def __init__(self, cluster, options, template, batch_system="sge"):
+        self.cluster = cluster
+        self.setup = command("module", package=" ".join(options["module"]))
+        self.job_cmd = command(template, **options[template])
+        jobopts = options[batch_system]
+        jobopts["memory"] = "{}".format(parse_bytes(jobopts["memory"]))
+        if "log_directory" not in jobopts:
+            jobopts["log_directory"] = self.cluster.log_directory
+        # TODO: check walltime and cputime format
+        # TODO: check if queue is valid
+        self.job_header = command(batch_system, **jobopts)
 
     @property
-    def setup_cmds(self):
-        return self._setup_cmds
+    def setup(self):
+        return self._setup
 
-    @setup_cmds.setter
-    def setup_cmds(self, setup_cmds):
-        self._setup_cmds = setup_cmds
+    @setup.setter
+    def setup(self, setup):
+        self._setup = setup
 
     @property
     def job_cmd(self):
         return self._job_cmd
 
     @job_cmd.setter
-    @abstractmethod
     def job_cmd(self, cmd_with_opts):
-        # FIXME: probably want to ingest a dict
         self._job_cmd = cmd_with_opts
 
     @property
     def job_script(self):
-        pieces = {
-            "job_header": self.job_header,
-            "env_header": self.env_header,
-            "worker_command": "\n".join(self.setup_cmds + self.job_cmd),
-        }
-        return self.script_template % pieces
+        return self._script_template.safe_substitute(
+            job_header=self.job_header, setup=self.setup, job_cmd=self.job_cmd
+        )
 
 
 # Variant Caller inputs:
@@ -64,9 +116,11 @@ class Split(BatchJob):
     - chromosome
 
     """
+
     pass
 
 
 class QueryCmd(object):
     """Query datasets to read metadata"""
+
     pass

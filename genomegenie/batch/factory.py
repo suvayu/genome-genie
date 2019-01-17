@@ -7,13 +7,13 @@
 """
 
 import os
-from copy import deepcopy
 from importlib import import_module
 
 from mako.lookup import TemplateLookup
 from mako import lexer, codegen
+from mako.exceptions import text_error_template
 
-from genomegenie.utils import raise_if_not, consume
+from genomegenie.utils import consume
 
 
 def template_dir():
@@ -23,9 +23,13 @@ def template_dir():
 
 def command(template, **options):
     """Generate command string from Mako template and options"""
-    lookup = TemplateLookup(directories=[template_dir()], default_filters=[])
-    template = lookup.get_template(template)
-    return template.render(**options)
+    lookup = TemplateLookup(directories=[template_dir()], default_filters=[], strict_undefined=True)
+    try:
+        template = lookup.get_template(template)
+        return template.render(**options)
+    except:
+        print(text_error_template().render())
+        # raise
 
 
 def template_opts(template):
@@ -42,36 +46,3 @@ def template_opts(template):
             map(options.discard, [k for k in dir(filters) if not k.startswith("__")])
         )
         return options
-
-
-__TOOLS__ = ["gatk", "muse", "strelka", "freebayes"]
-
-
-def validate(opts):
-    """Raises ValueError if options are invalid/incomplete"""
-
-    raise_if_not([opts["tool"]], __TOOLS__, "Unsupported toolset")
-
-    _opts = dict((tool, template_opts(tool)) for tool in __TOOLS__)
-    mandatory_somatic = deepcopy(_opts["gatk"])
-    consume(
-        map(
-            mandatory_somatic.intersection_update,
-            [_opts[t] for t in ["gatk", "muse", "strelka"]],
-        )
-    )
-    mandatory_germline = deepcopy(_opts["gatk"])
-    consume(
-        map(
-            mandatory_somatic.intersection_update,
-            [_opts[t] for t in ["gatk", "freebayes", "strelka"]],
-        )
-    )
-
-    if "somatic" == opts["run_type"]:
-        raise_if_not(mandatory_somatic, opts, "Missing mandatory option")
-    elif "germline" == opts["run_type"]:
-        raise_if_not(mandatory_germline, opts, "Missing mandatory option")
-    else:
-        pass
-    return

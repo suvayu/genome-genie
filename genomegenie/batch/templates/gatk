@@ -3,21 +3,26 @@
 %>
 
 $GATKHOME/gatk \
-    --java-options ${javaopts if javaopts else '-Xmx64g'} \
-    ${'Mutect2' if tumor_bam else 'HaplotypeCaller'} \
-    -R ${ref_fasta} \
-% if tumor_bam:
+% if javaopts is UNDEFINED:
+    --java-options ${'-Xmx64g' javaopts} \
+% else:
+    --java-options ${javaopts} \
+% endif
+% if tumor_bam is UNDEFINED:
+    Mutect2 \
     -I ${tumor_bam} -tumor ${sample_name(tumor_bam)} \
     -I ${normal_bam} -normal ${sample_name(normal_bam)} \
     --germline-resource ${db} \
     --panel-of-normals ${pon} \
 % else:
+    HaplotypeCaller \
     -I ${normal_bam} \
 % endif
+    -R ${ref_fasta} \
     -O ${output} -bamout ${output | ungz,vcf2bam} \
-% if exome_bed:
+% if exome_bed is not UNDEFINED:
     -L ${exome_bed} \
 % endif
-% if nprocs:
+% if nprocs is not UNDEFINED:
     --native-pair-hmm-threads ${f'{nprocs}'}
 % endif
