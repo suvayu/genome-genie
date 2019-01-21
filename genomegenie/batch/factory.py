@@ -21,7 +21,7 @@ def template_dir():
     return f"{curdir}/templates"
 
 
-def command(template, **options):
+def compile_template(template, **options):
     """Generate command string from Mako template and options"""
     lookup = TemplateLookup(directories=[template_dir()], default_filters=[], strict_undefined=True)
     try:

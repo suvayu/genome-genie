@@ -4,7 +4,7 @@
 
 $GATKHOME/gatk \
 % if javaopts is UNDEFINED:
-    --java-options ${'-Xmx64g' javaopts} \
+    --java-options '-Xmx64g' \
 % else:
     --java-options ${javaopts} \
 % endif

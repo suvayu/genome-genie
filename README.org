@@ -1,13 +1,13 @@
-#+title: A toolkit for data analysis in Genomics
+#+title: Infrastructure tools for Genomics
 #+options: toc:nil
 
-* A toolkit for data analysis in Genomics
+* Infrastructure tools for Genomics
 ** Dependencies
 - =pyarrow=
 - =pysam=
 - =numpy=
-- =pandas= (optional)
-- =dask= (optional)
+- =pandas=
+- =dask=
 
 ** Job queues with SGE
 *** Concepts
@@ -26,3 +26,10 @@
 
 - calculate resource requirements
 - generate script
+
+** Docs
+task wise config:
+- ignore inputs
+- all inputs (special case)
+- module override
+- enable/disable job splitting

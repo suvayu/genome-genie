@@ -1,8 +1,18 @@
+<%!
+    from genomegenie.batch.filters import bam2pon, sample_name
+%>
+
 $GATKHOME/gatk \
-    --java-options ${javaopts if javaopts else '-Xmx64g'} \
+% if javaopts is UNDEFINED:
+    --java-options '-Xmx64g' \
+% else:
+    --java-options ${javaopts} \
+% endif
     Mutect2 \
     -R ${ref_fasta} \
-    -I ${normal_bam} -normal ${sample_name(normal_bam)} \
-    -O ${pon_out} \
-    --germline-resource ${genomedb} \
+    -I ${normal_bam} -normal ${sample_name(normal_bam, True)} \
+    -O ${normal_bam | bam2pon} \
+    --germline-resource ${db} \
+% if exome_bed is not UNDEFINED:
     -L ${exome_bed}
+% endif
