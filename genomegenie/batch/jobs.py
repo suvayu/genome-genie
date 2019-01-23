@@ -12,6 +12,7 @@ from textwrap import dedent
 
 from distributed.utils import parse_bytes
 
+from genomegenie.utils import add_class_property
 from genomegenie.batch.factory import command
 
 
