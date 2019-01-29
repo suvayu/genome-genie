@@ -9,6 +9,7 @@
 
 import logging
 import shlex
+import subprocess
 import time
 import numpy as np
 from collections.abc import Iterable
@@ -119,8 +120,8 @@ class Pipeline(object):
             inputs = glom(
                 self.inputs, dict((key, [Coalesce(key, default="")]) for key in keys)
             )
-            for key in keys:
-                inputs[key] = [i for i in filter(None, files[key])]
+            for key in keys:    # filter out no files (shows as empty string above)
+                inputs[key] = [i for i in filter(None, inputs[key])]
             jobs = [BatchJob(task, dict(**inputs, **opts))]
         else:
             jobs = [BatchJob(task, dict(**infile, **opts)) for infile in self.inputs]
