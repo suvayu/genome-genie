@@ -23,7 +23,7 @@ def template_dir():
 
 def compile_template(template, **options):
     """Generate command string from Mako template and options"""
-    lookup = TemplateLookup(directories=[template_dir()], default_filters=[], strict_undefined=True)
+    lookup = TemplateLookup(directories=[template_dir()], default_filters=[])
     try:
         template = lookup.get_template(template)
         return template.render(**options)
