@@ -96,11 +96,11 @@ class Pipeline(object):
     def walk(self, graph, predicate):
         """Walk a pipeline graph and apply predicate"""
         if not isinstance(graph, str) and isinstance(graph, Iterable):
+            # FIXME: should this be delayed?
             return [self.walk(item, predicate) for item in graph]
         else:
             return predicate(graph)
 
-    # @dask.delayed
     def process(self, task):
         """Return future"""
         # FIXME: propagate backend
@@ -125,7 +125,7 @@ class Pipeline(object):
             jobs = [BatchJob(task, dict(**inputs, **opts))]
         else:
             jobs = [BatchJob(task, dict(**infile, **opts)) for infile in self.inputs]
-        return [self.submit(job) for job in jobs]
+        return dask.delayed([self.submit(job) for job in jobs], nout=len(jobs))
 
     @contextmanager
     def job_file(self, script):
