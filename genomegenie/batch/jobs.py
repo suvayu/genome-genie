@@ -93,6 +93,19 @@ class Pipeline(object):
             )
         return (out, err)
 
+    def exec(self, monitor=None):
+        res = [None] * len(self.staged)
+        for idx, step in enumerate(self.staged):
+            res[idx] = step.compute()
+            # TODO: monitor
+            # while (monitor()):
+            #     pass
+        return res
+
+    def stage(self):
+        self.staged = self.walk(self.graph, self.process)
+        return self.staged
+
     def walk(self, graph, predicate):
         """Walk a pipeline graph and apply predicate"""
         if not isinstance(graph, str) and isinstance(graph, Iterable):
