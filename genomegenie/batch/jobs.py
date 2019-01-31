@@ -91,7 +91,7 @@ class Pipeline(object):
                 "stdout:\n{}\n"
                 "stderr:\n{}\n".format(proc.returncode, cmd_str, out, err)
             )
-        return out
+        return (out, err)
 
     def walk(self, graph, predicate):
         """Walk a pipeline graph and apply predicate"""
@@ -140,12 +140,12 @@ class Pipeline(object):
                 f.write(script)
             yield fn
 
-    # @dask.delayed
+    @dask.delayed
     def submit(self, job):
+        res = dict(script=job.script)
         with self.job_file(job.script) as fn:
-            out = self._call(shlex.split(self.submit_command) + [fn])
-            time.sleep(np.random.randint(2, 10))
-            return out
+            res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
+        return res
 
 
 add_class_property(Pipeline, "graph")
