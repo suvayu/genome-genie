@@ -73,9 +73,9 @@ class Pipeline(object):
 
         """
         cmd_str = " ".join(cmd)
-        logger.debug(
-            "Executing the following command to command line\n{}".format(cmd_str)
-        )
+        # logger.debug(
+        #     "Executing the following command to command line\n{}".format(cmd_str)
+        # )
 
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs
@@ -193,7 +193,7 @@ class BatchJob(object):
     """
 
     def __init__(self, template, options, backend="sge"):
-        pdb.set_trace()
+        # pdb.set_trace()
         self.setup = compile_template("module", package=" ".join(options["module"]))
         self.job_cmd = compile_template(template, **options)
         jobopts = options[backend]
