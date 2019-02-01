@@ -96,13 +96,19 @@ class Pipeline(object):
             )
         return (out, err)
 
-    def exec(self, monitor=None):
+    def execute(self, monitor=None):
         res = [None] * len(self.staged)
         for idx, step in enumerate(self.staged):
             res[idx] = step.compute()
+            jobids = glom(res[idx], ["jobid"])
             # TODO: monitor
-            # while (monitor()):
-            #     pass
+            while (len(jobids)):
+                _jobids = deepcopy(jobids)
+                for job in _jobids:
+                    out, err = self._call(shlex.split(f"qstat -j {job}"))
+                    if err:
+                        jobids.remove(job)
+                time.sleep(60)
         return res
 
     def stage(self):
