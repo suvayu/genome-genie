@@ -1,4 +1,5 @@
 #
+#$ -N ${name}
 #$ -q ${queue}
 #$ -j y
 #$ -o ${log_directory}/

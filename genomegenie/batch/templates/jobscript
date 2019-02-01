@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# job options
+${job_header}
+
+# setup
+${setup}
+
+# job command
+${job_cmd}
