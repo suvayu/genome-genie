@@ -96,13 +96,19 @@ class Pipeline(object):
             )
         return (out, err)
 
-    def exec(self, monitor=None):
+    def execute(self, monitor=None):
         res = [None] * len(self.staged)
         for idx, step in enumerate(self.staged):
             res[idx] = step.compute()
+            jobids = glom(res[idx], ["jobid"])
             # TODO: monitor
-            # while (monitor()):
-            #     pass
+            while (len(jobids)):
+                _jobids = deepcopy(jobids)
+                for job in _jobids:
+                    out, err = self._call(shlex.split(f"qstat -j {job}"))
+                    if err:
+                        jobids.remove(job)
+                time.sleep(60)
         return res
 
     def stage(self):
@@ -111,6 +117,7 @@ class Pipeline(object):
 
     def walk(self, graph, predicate):
         """Walk a pipeline graph and apply predicate"""
+        # FIXME: wrap tuples in delayed (parallel), call list items sequentially
         if not isinstance(graph, str) and isinstance(graph, Iterable):
             # FIXME: should this be delayed?
             return [self.walk(item, predicate) for item in graph]
@@ -118,8 +125,7 @@ class Pipeline(object):
             return predicate(graph)
 
     def process(self, task):
-        """Return future"""
-        # FIXME: propagate backend
+        """Return delayed"""
         # NOTE: use dictionary unpacking to optionally overwrite global modules
         # with task specific modules
         opts = {
@@ -157,11 +163,16 @@ class Pipeline(object):
             yield fn
 
     @dask.delayed
-    def submit(self, job):
+    def submit(self, job, monitor_t=600):
+        """Submit and wait"""
         res = dict(script=job.script)
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
             res["jobid"] = self._job_id_from_submit_output(res["out"])
+            err = False
+            while (not err):
+                out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
+                time.sleep(monitor_t)
         return res
 
     def _job_id_from_submit_output(self, out):
