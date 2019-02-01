@@ -11,6 +11,7 @@ import logging
 import shlex
 import subprocess
 import time
+import re
 import numpy as np
 from collections.abc import Iterable
 from contextlib import contextmanager
@@ -33,6 +34,8 @@ class Pipeline(object):
     pipeline graph: [1, [2.1, 2.2], 3, [4.1, [4.2, 5.1]], 6, 7]
 
     """
+
+    job_id_regexp = r'(?P<job_id>\d+)'
 
     def __init__(self, cluster, options, backend="sge"):
         self.submit_command = cluster.submit_command
@@ -158,7 +161,26 @@ class Pipeline(object):
         res = dict(script=job.script)
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
+            res["jobid"] = self._job_id_from_submit_output(res["out"])
         return res
+
+    def _job_id_from_submit_output(self, out):
+        """(copied as is from JobQueueCluster)"""
+        match = re.search(self.job_id_regexp, out)
+        if match is None:
+            msg = ('Could not parse job id from submission command '
+                   "output.\nJob id regexp is {!r}\nSubmission command "
+                   'output is:\n{}'.format(self.job_id_regexp, out))
+            raise ValueError(msg)
+
+        job_id = match.groupdict().get('job_id')
+        if job_id is None:
+            msg = ("You need to use a 'job_id' named group in your regexp, e.g. "
+                   "r'(?P<job_id>\d+)', in your regexp. Your regexp was: "
+                   "{!r}".format(self.job_id_regexp))
+            raise ValueError(msg)
+
+        return job_id
 
 
 add_class_property(Pipeline, "graph")
