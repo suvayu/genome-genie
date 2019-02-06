@@ -152,7 +152,8 @@ class Pipeline(object):
                 inputs[key] = [i for i in filter(None, inputs[key])]
             jobs = [BatchJob(task, dict(**inputs, **opts))]
         else:
-            jobs = [BatchJob(task, dict(**infile, **opts)) for infile in self.inputs]
+            inputs = opts.get("inputs", self.inputs)
+            jobs = [BatchJob(task, dict(**infile, **opts)) for infile in inputs]
         return dask.delayed([self.submit(job) for job in jobs], nout=len(jobs))
 
     @contextmanager
