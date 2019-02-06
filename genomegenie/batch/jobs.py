@@ -16,7 +16,7 @@ import numpy as np
 from uuid import uuid4
 from collections.abc import Iterable
 from contextlib import contextmanager
-from functools import reduce, partial
+from functools import reduce
 import pdb
 
 import dask
