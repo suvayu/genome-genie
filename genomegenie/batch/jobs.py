@@ -13,9 +13,10 @@ import subprocess
 import time
 import re
 import numpy as np
+from uuid import uuid4
 from collections.abc import Iterable
 from contextlib import contextmanager
-from functools import reduce
+from functools import reduce, partial
 import pdb
 
 import dask
@@ -35,7 +36,7 @@ class Pipeline(object):
 
     """
 
-    job_id_regexp = r'(?P<job_id>\d+)'
+    job_id_regexp = r'Submitted job (?P<job_id>\d+)\\n'
 
     def __init__(self, cluster, options, backend="sge"):
         self.submit_command = cluster.submit_command
@@ -112,17 +113,27 @@ class Pipeline(object):
         return res
 
     def stage(self):
-        self.staged = self.walk(self.graph, self.process)
+        staged = self.walk(self.graph, self.process)
+        
         return self.staged
 
-    def walk(self, graph, predicate):
+    def walk(self, graph, applyfn):
         """Walk a pipeline graph and apply predicate"""
         # FIXME: wrap tuples in delayed (parallel), call list items sequentially
-        if not isinstance(graph, str) and isinstance(graph, Iterable):
-            # FIXME: should this be delayed?
-            return [self.walk(item, predicate) for item in graph]
+        if isinstance(graph, str):
+            return applyfn(graph)
+        elif isinstance(graph, tuple):
+            return dask.delayed([self.walk(item, applyfn) for item in graph], nout=len(graph))
+        elif isinstance(graph, list):
+            res = [self.walk(item, applyfn) for item in graph]
+            @dask.delayed
+            def _queue(res, item):
+                res.append(item)
+                return res
+            return reduce(_queue, res, [])
         else:
-            return predicate(graph)
+            raise TypeError(f"Unknown type in pipeline: {type(graph)}\n"
+                            "Allowed types: 'str', 'tuple', or 'list'")
 
     def process(self, task):
         """Return delayed"""
@@ -168,11 +179,12 @@ class Pipeline(object):
         res = dict(script=job.script)
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
+            print(res)
             res["jobid"] = self._job_id_from_submit_output(res["out"])
-            err = False
-            while (not err):
-                out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
-                time.sleep(monitor_t)
+            # err = False
+            # while (not err):
+            #     out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
+            #     time.sleep(monitor_t)
         return res
 
     def _job_id_from_submit_output(self, out):
@@ -227,13 +239,13 @@ class BatchJob(object):
 
     def __init__(self, template, options, backend="sge"):
         # pdb.set_trace()
+        print(f"task: {template}")
+        print(options)
         self.setup = compile_template("module", package=" ".join(options["module"]))
         self.job_cmd = compile_template(template, **options)
         jobopts = options[backend]
         jobopts["memory"] = "{}".format(parse_bytes(jobopts["memory"]))
-        # FIXME: do this in pipeline
-        # if "log_directory" not in jobopts:
-        #     jobopts["log_directory"] = self.cluster.log_directory
+        jobopts["name"] = f"{template}-{uuid4()}"
         # TODO: check walltime and cputime format
         # TODO: check if queue is valid
         self.job_header = compile_template(backend, **jobopts)
