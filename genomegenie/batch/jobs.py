@@ -36,7 +36,7 @@ class Pipeline(object):
 
     """
 
-    job_id_regexp = r'Submitted job (?P<job_id>\d+)\\n'
+    job_id_regexp = r'Your job (?P<job_id>\d+)'
 
     def __init__(self, cluster, options, backend="sge"):
         self.submit_command = cluster.submit_command
