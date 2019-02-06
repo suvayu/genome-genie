@@ -2,7 +2,7 @@
 """Utilities"""
 
 
-from collections import deque
+from collections import deque, Sequence
 from copy import deepcopy
 
 
@@ -18,6 +18,15 @@ def consume(iterator):
     see: "Itertools Recipes" in itertools docs
     """
     deque(iterator, maxlen=0)
+
+
+def flatten(lst):
+    """Flatten an arbitrarily nested list"""
+    for el in lst:
+        if isinstance(el, Sequence) and not isinstance(el, (str, bytes)):
+            yield from flatten(el)
+        else:
+            yield el
 
 
 def add_class_property(cls, prop):
