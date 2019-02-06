@@ -3,8 +3,13 @@
 # job options
 ${job_header}
 
+date +%H:%M:%S
 # setup
-${setup}
+: ${setup}
 
 # job command
 ${job_cmd}
+
+echo Submitted job $RANDOM
+sleep $(( $RANDOM % 10))
+date +%H:%M:%S
