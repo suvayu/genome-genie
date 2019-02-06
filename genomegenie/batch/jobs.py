@@ -97,40 +97,35 @@ class Pipeline(object):
             )
         return (out, err)
 
-    def execute(self, monitor=None):
-        res = [None] * len(self.staged)
-        for idx, step in enumerate(self.staged):
-            res[idx] = step.compute()
-            jobids = glom(res[idx], ["jobid"])
-            # TODO: monitor
-            while (len(jobids)):
-                _jobids = deepcopy(jobids)
-                for job in _jobids:
-                    out, err = self._call(shlex.split(f"qstat -j {job}"))
-                    if err:
-                        jobids.remove(job)
+    def execute(self, monitor):
+        staged = self.stage(self.graph, self.process)
+        return self.compute(staged, monitor)
+
+    def compute(self, graph, monitor):
+        if isinstance(graph, list):
+            return [self.compute(item, monitor) for item in graph]
+        else:
+            res = graph.compute()
+            running = True
+            while (monitor and running):
+                out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
+                running = not err
                 time.sleep(60)
-        return res
+            return res
 
-    def stage(self):
-        staged = self.walk(self.graph, self.process)
-        
-        return self.staged
-
-    def walk(self, graph, applyfn):
-        """Walk a pipeline graph and apply predicate"""
-        # FIXME: wrap tuples in delayed (parallel), call list items sequentially
+    def stage(self, graph, applyfn):
+        """Walk a pipeline graph and stage tasks by applying the function"""
         if isinstance(graph, str):
             return applyfn(graph)
         elif isinstance(graph, tuple):
-            return dask.delayed([self.walk(item, applyfn) for item in graph], nout=len(graph))
+            return dask.delayed([self.stage(item, applyfn) for item in graph], nout=len(graph))
         elif isinstance(graph, list):
-            res = [self.walk(item, applyfn) for item in graph]
-            @dask.delayed
-            def _queue(res, item):
-                res.append(item)
-                return res
-            return reduce(_queue, res, [])
+            # @dask.delayed
+            # def _queue(res, task):
+            #     res.append(task.compute())
+            #     return res
+            # return reduce(_queue, graph, [])
+            return [self.stage(item, applyfn) for item in graph]
         else:
             raise TypeError(f"Unknown type in pipeline: {type(graph)}\n"
                             "Allowed types: 'str', 'tuple', or 'list'")
