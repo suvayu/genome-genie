@@ -175,7 +175,6 @@ class Pipeline(object):
         res = dict(script=job.script)
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
-            print(res)
             res["jobid"] = self._job_id_from_submit_output(res["out"])
             # err = False
             # while (not err):
@@ -235,8 +234,6 @@ class BatchJob(object):
 
     def __init__(self, template, options, backend="sge"):
         # pdb.set_trace()
-        print(f"task: {template}")
-        print(options)
         self.setup = compile_template("module", package=" ".join(options["module"]))
         self.job_cmd = compile_template(template, **options)
         jobopts = options[backend]
