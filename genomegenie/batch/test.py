@@ -2,9 +2,9 @@ from pprint import pprint
 
 from dask.distributed import Client
 
-from glom import glom, Coalesce
+from glom import glom, Coalesce, Inspect, flatten
 
-from genomegenie.utils import flatten
+from genomegenie.utils import flatten as myflatten
 from genomegenie.batch.debug import DummyCluster
 from genomegenie.batch.jobs import Pipeline
 from genomegenie.batch.factory import compile_template
@@ -37,7 +37,8 @@ opts = {
 }
 
 dummyopts = {
-    "pipeline": ["prep1", "ajob", "finalize"],
+    # "pipeline": ["prep1", "ajob", "finalize"],
+    "pipeline": [(["prep1", "ajob"], "bjob"), "finalize"],
     "module": ["gatk-4.0.1", "samtools"],
     "inputs": [
         {"normal_bam": "normal1.bam", "tumor_bam": "tumor1.bam"},
@@ -84,7 +85,7 @@ dummyopts = {
 #             [
 #                 i
 #                 for i in glom(
-#                     res, ([[Coalesce([[key]], key, default="empty")]], flatten)
+#                     res, ([[Coalesce([[key]], [key], key, default="whaat")]], flatten)
 #                 )
 #             ],
 #         )
