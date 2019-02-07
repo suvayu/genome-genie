@@ -38,8 +38,9 @@ class Pipeline(object):
 
     job_id_regexp = r'Your job (?P<job_id>\d+)'
 
-    def __init__(self, cluster, options, backend="sge"):
-        self.submit_command = cluster.submit_command
+    def __init__(self, client, options, backend="sge"):
+        self.client = client
+        self.submit_command = client.cluster.submit_command
         self.graph = options["pipeline"]
         self.inputs = options["inputs"]
         self.options = options
