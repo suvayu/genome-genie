@@ -12,7 +12,7 @@ from dask.distributed import LocalCluster, Client
 # from genomegenie.utils import flatten
 
 @delayed
-def dosomething(name):
+def dosomething(name, *args):
     res = {"name": name, "beg": datetime.now()}
     sleep(np.random.randint(10))
     res.update(rand=np.random.rand())
@@ -57,7 +57,11 @@ def dosomething(name):
 # loop.close()
 
 
-seq1 = [dosomething(name) for name in ["foo", "bar", "baz"]]
+# seq1 = [dosomething(name) for name in ["foo", "bar", "baz"]]
+inputs = ["foo", "bar", "baz"]
+seq1 = [dosomething(inputs[0])]
+for bit in inputs[1:]:
+    seq1.append(dosomething(bit, seq1[-1]))
 par1 = dosomething("whaat")
 par2 = dosomething("ahem")
-pipeline = [seq1, par1, par2]
+pipeline = delayed([seq1, par1, par2])
