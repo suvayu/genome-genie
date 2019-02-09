@@ -171,16 +171,16 @@ class Pipeline(object):
             yield fn
 
     @dask.delayed
-    def submit(self, job, monitor_t=600):
+    def submit(self, job, monitor_t, *args):
         """Submit and wait"""
         res = dict(script=job.script)
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
             res["jobid"] = self._job_id_from_submit_output(res["out"])
-            # err = False
-            # while (not err):
-            #     out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
-            #     time.sleep(monitor_t)
+            err = False
+            while (monitor_t and not err):  # not err => running
+                out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
+                time.sleep(monitor_t)
         return res
 
     def _job_id_from_submit_output(self, out):
