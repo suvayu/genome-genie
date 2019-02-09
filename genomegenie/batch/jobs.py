@@ -132,7 +132,7 @@ class Pipeline(object):
                             "Allowed types: 'str', 'tuple', or 'list'")
 
     def process(self, task):
-        """Return delayed"""
+        """Return list of jobs"""
         # NOTE: use dictionary unpacking to optionally overwrite global modules
         # with task specific modules
         opts = {
@@ -155,7 +155,7 @@ class Pipeline(object):
         else:
             inputs = opts.get("inputs", self.inputs)
             jobs = [BatchJob(task, dict(**infile, **opts)) for infile in inputs]
-        return dask.delayed([self.submit(job) for job in jobs], nout=len(jobs))
+        return jobs
 
     @contextmanager
     def job_file(self, script):
