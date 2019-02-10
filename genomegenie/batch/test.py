@@ -2,9 +2,9 @@ from pprint import pprint
 
 from dask.distributed import Client
 
-from glom import glom, Coalesce, Inspect, flatten
+from glom import glom, Coalesce, Inspect
 
-from genomegenie.utils import flatten as myflatten
+from genomegenie.utils import flatten
 from genomegenie.batch.debug import DummyCluster
 from genomegenie.batch.jobs import Pipeline
 from genomegenie.batch.factory import compile_template
@@ -61,7 +61,7 @@ dummyopts = {
         "nprocs": 4,
     },
     "finalize": {
-        "inputs": [{"ajob": "result1.vcf.gz", "bjob": "result1.vcf.gz"}],
+        "inputs": [{"ajob": "result1.vcf.gz", "bjob": "result2.vcf.gz"}],
         "output": "consolidated.parquet",
     },
     "sge": {
@@ -85,7 +85,11 @@ dummyopts = {
 #             [
 #                 i
 #                 for i in glom(
-#                     res, ([[Coalesce([[key]], [key], key, default="whaat")]], flatten)
+#                     res,
+#                     (
+#                         [[Coalesce([[[key]]], [[key]], [key], key, default="whaat")]],
+#                         myflatten,
+#                     ),
 #                 )
 #             ],
 #         )
