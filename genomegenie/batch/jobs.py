@@ -97,38 +97,81 @@ class Pipeline(object):
             )
         return (out, err)
 
-    def execute(self, monitor):
-        staged = self.stage(self.graph, self.process)
-        return self.compute(staged, monitor)
+    def stage(self, graph, process=None, submit=None, monitor_t=600, *args):
+        """Walk a pipeline graph and stage tasks.
 
-    def compute(self, graph, monitor):
-        if isinstance(graph, list):
-            return [self.compute(item, monitor) for item in graph]
-        else:
-            res = graph.compute()
-            running = True
-            while (monitor and running):
-                out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
-                running = not err
-                time.sleep(60)
-            return res
+        `graph` is the pipeline graph.
 
-    def stage(self, graph, applyfn):
-        """Walk a pipeline graph and stage tasks by applying the function"""
-        if isinstance(graph, str):
-            return applyfn(graph)
-        elif isinstance(graph, tuple):
-            return dask.delayed([self.stage(item, applyfn) for item in graph], nout=len(graph))
+        `process` is a `Callable` used to generate the batch job templates
+        (list of `BatchJob` instances) by applying on a graph element.  The
+        generated job templates are then fed to the `Callable` `submit` which
+        is wrapped by `dask.delayed`.  `args` are extra positional arguments
+        that are passed on to submit.  Typically these are dummies used to
+        enforce job dependencies; although nothing prevents a custom submit
+        function to make use of these in other ways.
+
+        The batch jobs are monitored every `monitor_t` seconds; passing 0 turns
+        the monitoring off.  This is useful during testing, or when you know
+        your pipeline is embarrassingly parallel (no dependent jobs).
+
+        In the absence of `process` and `submit`, `Pipeline.process` and
+        `Pipeline.submit` are used.
+
+        """
+
+        process = process if process else self.process
+        submit = submit if submit else self.submit
+
+        ## NOTE: remarks for the developer
+        # stage(..) implements a recursive algorithm to walk the pipeline
+        # graph.  The delayed job submission logic resides in the first
+        # if-block, which is activated when the graph is a tuple.  Essentially
+        # all elements are reduced to a tuple recursively, before this block
+        # creates and submits the job.  It is easy to understand once you
+        # realise an single entry (a string), is a 1-tuple (e.g. `("ajob",)`).
+        # So the recursive logic simply splits by, list, tuple, or string,
+        # until a graph element can be represented as a tuple of strings,
+        # before creating a delayed job submission function and returning it.
+
+        # set of parallel tasks:
+        # e.g.: ("foo", "bar", "baz"), ("foo", "bar", ["baz1", "baz2"])
+        if isinstance(graph, tuple):
+            tasks = [
+                [submit(job, monitor_t, *args) for job in process(task)]
+                if isinstance(task, str)
+                else self.stage(task, process, submit, monitor_t, *args)
+                for task in graph
+            ]
+            return dask.delayed(tasks, nout=len(graph))
+        # set of sequential tasks: may include nested set of parallel tasks
+        # e.g.: ["foo1", "foo2", "foo3"], ["foo", ("bar1", "bar2"), "baz"]
         elif isinstance(graph, list):
-            # @dask.delayed
-            # def _queue(res, task):
-            #     res.append(task.compute())
-            #     return res
-            # return reduce(_queue, graph, [])
-            return [self.stage(item, applyfn) for item in graph]
+            tasks = [
+                self.stage(
+                    (graph[0],) if isinstance(graph[0], str) else graph[0],
+                    process,
+                    submit,
+                    monitor_t,
+                    *args,
+                )
+            ]
+            for task in graph[1:]:
+                tasks.append(
+                    self.stage(
+                        (task,) if isinstance(task, str) else task,
+                        process,
+                        submit,
+                        monitor_t,
+                        tasks[-1],
+                        *args,
+                    )
+                )
+            return dask.delayed(tasks)
         else:
-            raise TypeError(f"Unknown type in pipeline: {type(graph)}\n"
-                            "Allowed types: 'str', 'tuple', or 'list'")
+            raise TypeError(
+                f"Unknown type in pipeline: {type(graph)}\n"
+                "Allowed types: 'str', 'tuple', or 'list'"
+            )
 
     def process(self, task):
         """Return list of jobs"""
