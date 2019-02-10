@@ -61,7 +61,7 @@ dummyopts = {
         "nprocs": 4,
     },
     "finalize": {
-        "inputs": [{"ajob": "result1.vcf.gz", "bjob": "result1.vcf.gz"}],
+        "inputs": [{"ajob": "result1.vcf.gz", "bjob": "result2.vcf.gz"}],
         "output": "consolidated.parquet",
     },
     "sge": {
@@ -85,7 +85,11 @@ dummyopts = {
 #             [
 #                 i
 #                 for i in glom(
-#                     res, ([[Coalesce([[key]], [key], key, default="whaat")]], flatten)
+#                     res,
+#                     (
+#                         [[Coalesce([[[key]]], [[key]], [key], key, default="whaat")]],
+#                         myflatten,
+#                     ),
 #                 )
 #             ],
 #         )
