@@ -36,7 +36,7 @@ class Pipeline(object):
 
     """
 
-    job_id_regexp = r'Your job (?P<job_id>\d+)'
+    job_id_regexp = r"Your job (?P<job_id>\d+)"
 
     def __init__(self, cluster, options, backend="sge"):
         self.submit_command = cluster.submit_command
@@ -220,7 +220,7 @@ class Pipeline(object):
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
             res["jobid"] = self._job_id_from_submit_output(res["out"])
             err = False
-            while (monitor_t and not err):  # not err => running
+            while monitor_t and not err:  # not err => running
                 out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
                 time.sleep(monitor_t)
         return res
@@ -229,16 +229,20 @@ class Pipeline(object):
         """(copied as is from JobQueueCluster)"""
         match = re.search(self.job_id_regexp, out)
         if match is None:
-            msg = ('Could not parse job id from submission command '
-                   "output.\nJob id regexp is {!r}\nSubmission command "
-                   'output is:\n{}'.format(self.job_id_regexp, out))
+            msg = (
+                "Could not parse job id from submission command "
+                "output.\nJob id regexp is {!r}\nSubmission command "
+                "output is:\n{}".format(self.job_id_regexp, out)
+            )
             raise ValueError(msg)
 
-        job_id = match.groupdict().get('job_id')
+        job_id = match.groupdict().get("job_id")
         if job_id is None:
-            msg = ("You need to use a 'job_id' named group in your regexp, e.g. "
-                   "r'(?P<job_id>\d+)', in your regexp. Your regexp was: "
-                   "{!r}".format(self.job_id_regexp))
+            msg = (
+                "You need to use a 'job_id' named group in your regexp, e.g. "
+                "r'(?P<job_id>\d+)', in your regexp. Your regexp was: "
+                "{!r}".format(self.job_id_regexp)
+            )
             raise ValueError(msg)
 
         return job_id
