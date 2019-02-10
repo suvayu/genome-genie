@@ -235,6 +235,7 @@ class BatchJob(object):
 
     def __init__(self, template, options, backend="sge"):
         # pdb.set_trace()
+        self._template = template  # for __repr__
         self.setup = compile_template("module", package=" ".join(options["module"]))
         self.job_cmd = compile_template(template, **options)
         jobopts = options[backend]
@@ -249,3 +250,6 @@ class BatchJob(object):
             setup=self.setup,
             job_cmd=self.job_cmd,
         )
+
+    def __repr__(self):
+        return f"BatchJob({self._template}) at {id(self)}"
