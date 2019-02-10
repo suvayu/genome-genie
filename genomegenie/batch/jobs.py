@@ -191,11 +191,11 @@ class Pipeline(object):
             inputs = glom(
                 self.inputs, dict((key, [Coalesce(key, default="")]) for key in keys)
             )
-            for key in keys:    # filter out no files (shows as empty string above)
+            for key in keys:  # filter out "no files" (shows as empty string above)
                 inputs[key] = [i for i in filter(None, inputs[key])]
             jobs = [BatchJob(task, dict(**inputs, **opts))]
         else:
-            inputs = opts.get("inputs", self.inputs)
+            inputs = opts.get("inputs", self.inputs)  # allow overriding inputs per job
             jobs = [BatchJob(task, dict(**infile, **opts)) for infile in inputs]
         return jobs
 
