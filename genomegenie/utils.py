@@ -20,6 +20,28 @@ def consume(iterator):
     deque(iterator, maxlen=0)
 
 
+class PrevItr(object):
+    """Iterator that remembers the previous value.
+
+    Iterating returns the current and the previous value.  The current and
+    previous values are also accessible via the cur and prev properties of the
+    iterator.
+
+    """
+    def __init__(self, itr):
+        self.itr = itr
+        self.prev = None
+        self.cur = None
+
+    def __next__(self):
+        self.prev = self.cur
+        self.cur = next(self.itr)
+        return (self.prev, self.cur)
+
+    def __iter__(self):
+        return self
+
+
 def flatten(lst):
     """Flatten an arbitrarily nested list"""
     for el in lst:
