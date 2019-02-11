@@ -13,6 +13,7 @@ import subprocess
 import time
 import re
 import numpy as np
+import pandas as pd
 from uuid import uuid4
 from collections.abc import Iterable
 from contextlib import contextmanager
