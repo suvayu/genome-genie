@@ -23,10 +23,38 @@ import dask
 from distributed.utils import parse_bytes, tmpfile
 from glom import glom, Coalesce
 
-from genomegenie.utils import add_class_property
+from genomegenie.utils import add_class_property, flatten
 from genomegenie.batch.factory import compile_template
 
 # logger = logging.getLogger(__name__)
+
+
+def results(res):
+    """Convert the returned job status from a pipeline to a dataframe
+
+    Please note this will work only for pipelines with a nesting level of 3 or
+    less.  For pipelines with greater depth, you need to add an extra, more
+    nested key as an argument to Coalesce below.
+
+    """
+    return pd.DataFrame(
+        dict(
+            (
+                key,
+                [
+                    i
+                    for i in glom(
+                        res,
+                        (
+                            [[Coalesce([[[key]]], [[key]], [key], key, default="?")]],
+                            flatten,
+                        ),
+                    )
+                ],
+            )
+            for key in ["jobid", "out", "err", "script"]
+        )
+    )
 
 
 class Pipeline(object):
