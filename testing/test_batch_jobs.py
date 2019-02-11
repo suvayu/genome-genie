@@ -6,7 +6,7 @@ from glom import glom, Coalesce, Inspect
 
 from genomegenie.utils import flatten
 from genomegenie.batch.debug import DummyCluster
-from genomegenie.batch.jobs import Pipeline
+from genomegenie.batch.jobs import Pipeline, results
 from genomegenie.batch.factory import compile_template
 
 opts = {
@@ -74,25 +74,13 @@ dummyopts = {
 }
 
 
-# cluster = DummyCluster(processes=True)
-# client = Client(cluster)
-# pipeline = Pipeline(cluster, dummyopts)
+if __name__ == '__main__':
+    cluster = DummyCluster(processes=True)
+    client = Client(cluster)
+    pipeline = Pipeline(cluster, dummyopts)
+    staged = pipeline.stage(pipeline.graph, monitor_t=0)
+    res = staged.compute()
 
-# df = pd.DataFrame(
-#     dict(
-#         (
-#             key,
-#             [
-#                 i
-#                 for i in glom(
-#                     res,
-#                     (
-#                         [[Coalesce([[[key]]], [[key]], [key], key, default="whaat")]],
-#                         myflatten,
-#                     ),
-#                 )
-#             ],
-#         )
-#         for key in ["jobid", "out", "err", "script"]
-#     )
-# )
+    df = results(res)
+    df.info()
+    df.to_csv('job_output.csv')
