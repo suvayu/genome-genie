@@ -10,6 +10,8 @@ from dask.distributed import Client
 from genomegenie.batch.jobs import Pipeline, results
 
 
+filterwarnings(action="ignore", category=UserWarning, message=".*")
+
 
 def test_pipeline_stage():
     graph = [(["foo", "bar"], "baz"), "whaat"]
