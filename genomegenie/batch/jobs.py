@@ -126,6 +126,7 @@ class Pipeline(object):
             )
         return (out, err)
 
+    @classmethod
     def stage(self, graph, process=None, submit=None, monitor_t=600, *args):
         """Walk a pipeline graph and stage tasks.
 
