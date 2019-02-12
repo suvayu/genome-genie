@@ -3,7 +3,6 @@ from datetime import datetime
 from itertools import product
 from warnings import filterwarnings
 
-# import pytest
 import numpy as np
 import dask
 from dask.distributed import Client

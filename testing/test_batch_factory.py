@@ -1,7 +1,5 @@
 from textwrap import dedent
 
-import pytest
-
 from genomegenie.batch.factory import template_vars_impl
 
 
