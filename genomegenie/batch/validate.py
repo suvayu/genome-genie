@@ -9,7 +9,7 @@
 from copy import deepcopy
 
 from genomegenie.utils import raise_if_not, consume
-from genomegenie.batch.factory import template_opts
+from genomegenie.batch.factory import template_vars
 
 
 __TOOLS__ = ["gatk", "muse", "strelka", "freebayes"]
@@ -22,7 +22,7 @@ def validate(opts):
 
     raise_if_not([opts["tool"]], __TOOLS__, "Unsupported toolchain")
 
-    _opts = dict((tool, template_opts(tool)) for tool in __TOOLS__)
+    _opts = dict((tool, template_vars(tool)) for tool in __TOOLS__)
     mandatory_somatic = set(deepcopy(_opts["gatk"]))
     consume(
         map(

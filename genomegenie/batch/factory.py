@@ -32,17 +32,22 @@ def compile_template(template, **options):
         # raise
 
 
-def template_opts(template):
+def template_vars(template):
+    """Find the variables in a template"""
     with open("/".join([template_dir(), template]), "r") as template:
-        # see: https://stackoverflow.com/a/23577289
-        mylexer = lexer.Lexer(template.read())
-        node = mylexer.parse()
-        compiler = lambda: None  # dummy compiler
-        compiler.reserved_names = set()
-        options = codegen._Identifiers(compiler, node).undeclared
+        return template_vars_impl(template.read())
 
-        filters = import_module(".filters", "genomegenie.batch")
-        consume(
-            map(options.discard, [k for k in dir(filters) if not k.startswith("__")])
-        )
-        return options
+
+def template_vars_impl(template_str):
+    # see: https://stackoverflow.com/a/23577289
+    mylexer = lexer.Lexer(template_str)
+    node = mylexer.parse()
+    compiler = lambda: None  # dummy compiler
+    compiler.reserved_names = set()
+    options = codegen._Identifiers(compiler, node).undeclared
+
+    filters = import_module(".filters", "genomegenie.batch")
+    consume(
+        map(options.discard, [k for k in dir(filters) if not k.startswith("__")])
+    )
+    return options
