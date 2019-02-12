@@ -30,7 +30,7 @@ from genomegenie.batch.factory import compile_template
 # logger = logging.getLogger(__name__)
 
 
-def results(res):
+def results(res, depth=3, cols=["jobid", "out", "err", "script"]):
     """Convert the returned job status from a pipeline to a dataframe
 
     Please note this will work only for pipelines with a nesting level of 3 or
@@ -38,6 +38,13 @@ def results(res):
     nested key as an argument to Coalesce below.
 
     """
+
+    def _nest(key, depth):
+        res = [key]
+        for i in range(depth):
+            res.append([res[-1]])
+        return res
+
     return pd.DataFrame(
         dict(
             (
@@ -45,15 +52,11 @@ def results(res):
                 [
                     i
                     for i in glom(
-                        res,
-                        (
-                            [[Coalesce([[[key]]], [[key]], [key], key, default="?")]],
-                            flatten,
-                        ),
+                        res, ([[Coalesce(*_nest(key, depth), default="?")]], flatten)
                     )
                 ],
             )
-            for key in ["jobid", "out", "err", "script"]
+            for key in cols
         )
     )
 
