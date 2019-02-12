@@ -149,8 +149,8 @@ class Pipeline(object):
 
         """
 
-        process = process if process else self.process
-        submit = submit if submit else self.submit
+        process = process if process is not None else self.process
+        submit = submit if submit is not None else self.submit
 
         ## NOTE: remarks for the developer
         # stage(..) implements a recursive algorithm to walk the pipeline
