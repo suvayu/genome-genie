@@ -75,7 +75,7 @@ class Pipeline(object):
         self.graph = options["pipeline"]
         self.inputs = options["inputs"]
         self.options = options
-        self.backend = backend  # FIXME: propagate down the chain
+        self.backend = backend
 
     def __repr__(self):
         pass
@@ -216,7 +216,7 @@ class Pipeline(object):
             self.backend: self.options[self.backend],
         }
         if opts.get("inputs", None) == "ignore":
-            jobs = [BatchJob(task, opts)]
+            jobs = [BatchJob(task, opts, self.backend)]
         elif opts.get("inputs", None) == "all":  # e.g. panel of normal
             keys = reduce(
                 lambda i, j: i.union(set(j)), [i.keys() for i in self.inputs], set()
@@ -226,10 +226,13 @@ class Pipeline(object):
             )
             for key in keys:  # filter out "no files" (shows as empty string above)
                 inputs[key] = [i for i in filter(None, inputs[key])]
-            jobs = [BatchJob(task, dict(**inputs, **opts))]
+            jobs = [BatchJob(task, dict(**inputs, **opts), self.backend)]
         else:
             inputs = opts.get("inputs", self.inputs)  # allow overriding inputs per job
-            jobs = [BatchJob(task, dict(**infile, **opts)) for infile in inputs]
+            jobs = [
+                BatchJob(task, dict(**infile, **opts), self.backend)
+                for infile in inputs
+            ]
         return jobs
 
     @contextmanager
