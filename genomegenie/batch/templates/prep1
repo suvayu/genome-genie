@@ -1,8 +1,0 @@
-<%!
-    from genomegenie.batch.filters import bam2pon, sample_name
-%>
-: prep1 \
-    -R ${ref_fasta} \
-    -I ${normal_bam} -normal ${sample_name(normal_bam, debug=True)} \
-    -O ${normal_bam | bam2pon} \
-    --germline-resource ${db}

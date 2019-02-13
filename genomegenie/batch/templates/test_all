@@ -1,0 +1,19 @@
+<%!
+    from genomegenie.batch.filters import bam2pon
+%>
+
+cat <<EOF > ${normals_list}
+% for bam in normal_bam:
+${bam | bam2pon}
+% endfor
+EOF
+
+$GATKHOME/gatk \
+% if javaopts is UNDEFINED:
+    --java-options '-Xmx64g' \
+% else:
+    --java-options ${javaopts} \
+% endif
+    CreateSomaticPanelOfNormals \
+    -vcfs ${normals_list} \
+    -O ${pon}

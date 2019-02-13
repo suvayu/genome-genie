@@ -2,6 +2,7 @@ from time import sleep
 from datetime import datetime
 from itertools import product
 from warnings import filterwarnings
+from collections import namedtuple
 
 import numpy as np
 import dask
@@ -11,6 +12,8 @@ from genomegenie.batch.jobs import Pipeline, results
 
 
 filterwarnings(action="ignore", category=UserWarning, message=".*")
+
+DummyCluster = namedtuple("DummyCluster", ["submit_command"])
 
 
 def test_pipeline_stage():
@@ -51,45 +54,49 @@ def test_pipeline_stage():
     assert max(t1) < min(t2)
 
 
-opts = {
-    "pipeline": [(["prep1", "ajob"], "bjob"), "finalize"],
-    "module": ["pkg1", "pkg2"],
-    "inputs": [
-        {"normal_bam": "normal1.bam", "tumor_bam": "tumor1.bam"},
-        {"normal_bam": "normal2.bam", "tumor_bam": "tumor2.bam"},
-        {"normal_bam": "normal3.bam", "tumor_bam": "tumor3.bam"},
-    ],
-    "split": {},
-    "prep1": {"ref_fasta": "reference.fasta", "db": "somedb.vcf", "pon": "pon.vcf"},
-    "ajob": {
-        "ref_fasta": "reference.fasta",
-        "output": "result1.vcf.gz",
-        "db": "somedb.vcf",
-        "pon": "pon.vcf",
-        "nprocs": 4,
-    },
-    "bjob": {
-        "ref_fasta": "reference.fasta",
-        "output": "result2.vcf.gz",
-        "db": "somedb.vcf",
-        "nprocs": 4,
-    },
-    "finalize": {
-        "inputs": [{"ajob": "result1.vcf.gz", "bjob": "result2.vcf.gz"}],
-        "output": "consolidated.parquet",
-    },
-    "sge": {
-        "queue": "short.q",
-        "log_directory": "batch",
-        "walltime": "00:30:00",
-        "cputime": "00:30:00",
-        "memory": "16 GB",
-    },
-}
+def test_pipeline_process():
+    opts = {
+        "pipeline": [],
+        "module": ["pkg1", "pkg2"],
+        "inputs": [
+            {"normal_bam": "normal1.bam", "tumor_bam": "tumor1.bam"},
+            {"normal_bam": "normal2.bam", "tumor_bam": "tumor2.bam"},
+            {"normal_bam": "normal3.bam", "tumor_bam": "tumor3.bam"},
+        ],
+        "test_all": {
+            "inputs": "all",
+            "normals_list": "normals.txt",
+            "pon": "pon.vcf",
+        },
+        "test_regular": {
+            "ref_fasta": "reference.fasta",
+            "output": "result.vcf.gz",
+            "db": "somedb.vcf",
+            "pon": "pon.vcf",
+            "nprocs": 4,
+        },
+        "test_override": {
+            "inputs": [{"ajob": "result1.vcf.gz", "bjob": "result2.vcf.gz"}],
+            "output": "consolidated.parquet",
+        },
+        "sge": {
+            "queue": "short.q",
+            "log_directory": "batch",
+            "walltime": "00:30:00",
+            "cputime": "00:30:00",
+            "memory": "16 GB",
+        },
+    }
 
-# if __name__ == '__main__':
-#     cluster = DummyCluster(processes=True)
-#     client = Client(cluster)
-#     res = test_pipeline_stage()
+    cluster = DummyCluster("qsub")
+    pipeline = Pipeline(cluster, opts)
 
+    # check number of jobs (varies with different input overrides)
+    jobs = pipeline.process("test_all")
+    assert 1 == len(jobs)
 
+    jobs = pipeline.process("test_regular")
+    assert len(jobs) == len(opts["inputs"])
+
+    jobs = pipeline.process("test_override")
+    assert len(jobs) == len(opts["test_override"]["inputs"])

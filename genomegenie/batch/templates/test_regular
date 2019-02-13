@@ -1,7 +1,8 @@
 <%!
     from genomegenie.batch.filters import ungz, vcf2bam, sample_name
 %>
-: $GATKHOME/gatk \
+
+$GATKHOME/gatk \
 % if javaopts is UNDEFINED:
     --java-options '-Xmx64g' \
 % else:
@@ -19,6 +20,9 @@
 % endif
     -R ${ref_fasta} \
     -O ${output} -bamout ${output | ungz,vcf2bam} \
+% if exome_bed is not UNDEFINED:
+    -L ${exome_bed} \
+% endif
 % if nprocs is not UNDEFINED:
     --native-pair-hmm-threads ${f'{nprocs}'}
 % endif
