@@ -18,6 +18,7 @@ from uuid import uuid4
 from collections.abc import Iterable
 from contextlib import contextmanager
 from functools import reduce
+from textwrap import dedent
 import pdb
 
 import dask
@@ -78,7 +79,16 @@ class Pipeline(object):
         self.backend = backend
 
     def __repr__(self):
-        pass
+        res = f"""
+        Pipeline: {self.graph}
+
+        Backend: {self.backend}
+
+        Inputs: {self.inputs}
+
+        Options: {self.options}
+        """
+        return dedent(res)
 
     def _call(self, cmd, **kwargs):
         """Call a command using subprocess.Popen.
@@ -334,4 +344,10 @@ class BatchJob(object):
         )
 
     def __repr__(self):
-        return f"BatchJob({self._template}) at {id(self)}"
+        res = f"""
+        BatchJob({self._template}) at {id(self)}
+
+        Script:
+        {self.script}
+        """
+        return dedent(res)
