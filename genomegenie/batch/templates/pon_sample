@@ -10,7 +10,7 @@ $GATKHOME/gatk \
 % endif
     Mutect2 \
     -R ${ref_fasta} \
-    -I ${normal_bam} -normal ${sample_name(normal_bam, debug=True)} \
+    -I ${normal_bam} -normal ${sample_name(normal_bam)} \
     -O ${normal_bam | bam2pon} \
     --germline-resource ${db} \
 % if exome_bed is not UNDEFINED:

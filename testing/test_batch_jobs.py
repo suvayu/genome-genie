@@ -25,7 +25,7 @@ def test_pipeline_stage():
     @dask.delayed
     def submit(job, monitor_t, *args):
         res = {"name": job, "beg": datetime.now()}
-        sleep(3*np.random.rand())
+        sleep(3 * np.random.rand())
         res.update(end=datetime.now())
         return res
 
