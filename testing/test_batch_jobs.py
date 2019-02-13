@@ -13,8 +13,6 @@ from genomegenie.batch.jobs import Pipeline, results
 
 filterwarnings(action="ignore", category=UserWarning, message=".*")
 
-DummyCluster = namedtuple("DummyCluster", ["submit_command"])
-
 
 def test_pipeline_stage():
     graph = [(["foo", "bar"], "baz"), "whaat"]
@@ -88,6 +86,7 @@ def test_pipeline_process():
         },
     }
 
+    DummyCluster = namedtuple("DummyCluster", ["submit_command"])
     cluster = DummyCluster("qsub")
     pipeline = Pipeline(cluster, opts)
 
