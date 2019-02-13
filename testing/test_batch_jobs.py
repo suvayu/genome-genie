@@ -100,3 +100,9 @@ def test_pipeline_process():
 
     jobs = pipeline.process("test_override")
     assert len(jobs) == len(opts["test_override"]["inputs"])
+
+    # task specific module override
+    pipeline.options["test_regular"]["module"] = ["mypkg"]
+    jobs = pipeline.process("test_regular")
+    assert jobs[0].script.find("mypkg")
+    assert all([i not in jobs[0].script for i in pipeline.options["module"]])
