@@ -6,6 +6,7 @@ import re
 import shlex
 import subprocess
 from functools import partial
+from pathlib import Path
 
 
 def sample_name(filename, cmd_t="", debug=False):
@@ -27,6 +28,15 @@ def sample_name(filename, cmd_t="", debug=False):
         if found:  # match the first by convention
             break
     return found.group(6)
+
+
+def path_transform(fname, destdir, ext=None):
+    fname, destdir = Path(fname), Path(destdir)
+    if ext is None:
+        res = destdir / fname.name
+    else:
+        res = destdir / (fname.stem + f".{ext}")
+    return str(res)
 
 
 def filename_filter(fname, ext1, ext2):
