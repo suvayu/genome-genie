@@ -1,7 +1,6 @@
 from time import sleep
 from datetime import datetime
 from itertools import product
-from warnings import filterwarnings
 from collections import namedtuple
 
 import numpy as np
@@ -9,9 +8,6 @@ import dask
 from dask.distributed import Client
 
 from genomegenie.batch.jobs import Pipeline, results
-
-
-filterwarnings(action="ignore", category=UserWarning, message=".*")
 
 
 def test_pipeline_stage():
