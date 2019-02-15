@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Filters for Mako templates"""
+"""Filters to be used in Mako templates"""
 
 
 import re
@@ -31,6 +31,18 @@ def sample_name(filename, cmd_t="", debug=False):
 
 
 def path_transform(fname, destdir, ext=None):
+    """Rename a file path to a different directory.
+
+    Given a filename, and a destination directory, return a new path that
+    "moves" the file to the destination directory.  Optionally, if an extension
+    is provided, the extension of the filename is also transformed.
+
+    >>> path_transform('/path/to/input/sample.bam', '/path/to/output')
+    '/path/to/output/sample.bam'
+    >>> path_transform('/path/to/input/sample.bam', '/path/to/output', 'vcf')
+    '/path/to/output/sample.vcf'
+
+    """
     fname, destdir = Path(fname), Path(destdir)
     if ext is None:
         res = destdir / fname.name
@@ -40,7 +52,21 @@ def path_transform(fname, destdir, ext=None):
 
 
 def filename_filter(fname, ext1, ext2):
-    """Convert filenames of one type to another (used in templates)"""
+    """Convert filenames of one type to another.
+
+    NOTE: If you need to do a non-trivial replacement, you should include the
+    preceding '.' to anchor your pattern (see examples below)
+
+    >>> filename_filter('sample.bam', 'bam', 'vcf')
+    'sample.vcf'
+    >>> filename_filter('variants.vcf.gz', '.gz', '')
+    'variants.vcf'
+    >>> filename_filter('variants.vcf', '', '.gz')
+    'variants.vcf.gz'
+    >>> filename_filter('sample.bam', '.bam', '-pon.vcf.gz')
+    'sample-pon.vcf.gz'
+
+    """
     return fname[: fname.rfind(ext1)] + ext2
 
 
