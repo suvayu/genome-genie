@@ -1,5 +1,5 @@
 <%!
-    from genomegenie.batch.filters import bam2pon, sample_name
+    from genomegenie.batch.filters import bam2pon, sample_name, path_transform
 %>
 
 $GATKHOME/gatk \
@@ -11,7 +11,7 @@ $GATKHOME/gatk \
     Mutect2 \
     -R ${ref_fasta} \
     -I ${normal_bam} -normal ${sample_name(normal_bam)} \
-    -O ${normal_bam | bam2pon} \
+    -O ${path_transform(normal_bam, output) | bam2pon} \
     --germline-resource ${db} \
 % if exome_bed is not UNDEFINED:
     -L ${exome_bed}

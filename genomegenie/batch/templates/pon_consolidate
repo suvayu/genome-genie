@@ -1,10 +1,10 @@
 <%!
-    from genomegenie.batch.filters import bam2pon
+    from genomegenie.batch.filters import bam2pon, path_transform
 %>
 
 cat <<EOF > ${normals_list}
 % for bam in normal_bam:
-${bam | bam2pon}
+${path_transform(bam, output) | bam2pon}
 % endfor
 EOF
 

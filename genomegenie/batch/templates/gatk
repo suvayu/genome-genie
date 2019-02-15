@@ -1,5 +1,5 @@
 <%!
-    from genomegenie.batch.filters import ungz, vcf2bam, sample_name
+    from genomegenie.batch.filters import sample_name, path_transform
 %>
 
 $GATKHOME/gatk \
@@ -19,7 +19,8 @@ $GATKHOME/gatk \
     --panel-of-normals ${pon} \
 % endif
     -R ${ref_fasta} \
-    -O ${output} -bamout ${output | ungz,vcf2bam} \
+    -O ${path_transform(normal_bam, output, 'vcf.gz')} \
+    -bamout ${path_transform(normal_bam, output)} \
 % if exome_bed is not UNDEFINED:
     -L ${exome_bed} \
 % endif

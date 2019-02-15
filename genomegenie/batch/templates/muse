@@ -1,7 +1,11 @@
 <%!
-    from genomegenie.batch.filters import ungz, vcf2tsv
+    from genomegenie.batch.filters import bam2tsv, bam2vcf, path_transform
 %>
 
-MuSE call -f ${ref_fasta} -O ${output | ungz,vcf2tsv} ${tumor_bam} ${normal_bam}
+MuSE call -f ${ref_fasta} \
+-O ${path_transform(normal_bam, output) | bam2tsv} \
+${tumor_bam} ${normal_bam}
 
-MuSE sump -I ${output | ungz,vcf2tsv} -O ${output} -D ${db} ${'-E' if exome_bed is UNDEFINED else '-G'}
+MuSE sump -I ${path_transform(normal_bam, output) | bam2tsv} \
+-O ${path_transform(normal_bam, output) | bam2vcf} -D ${db} \
+${'-E' if exome_bed is UNDEFINED else '-G'}
