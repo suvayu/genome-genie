@@ -107,7 +107,7 @@ class Pipeline(object):
 
         Examples
         --------
-        >>> self._call(['ls', '/foo'])
+        >>> self._call(['ls', '/foo'])  # doctest: +SKIP
 
         Returns
         -------
