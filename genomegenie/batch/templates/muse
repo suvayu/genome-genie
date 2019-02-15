@@ -8,4 +8,4 @@ ${tumor_bam} ${normal_bam}
 
 MuSE sump -I ${path_transform(normal_bam, output) | bam2tsv} \
 -O ${path_transform(normal_bam, output) | bam2vcf} -D ${db} \
-${'-E' if exome_bed is UNDEFINED else '-G'}
+${'-G' if exome_bed is UNDEFINED else '-E'}
