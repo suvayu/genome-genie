@@ -3,16 +3,8 @@
 # job options
 ${job_header}
 
-# debug
-# echo Your job $RANDOM has been submitted
-# date +%H:%M:%S
-
 # setup
 ${setup}
 
 # job command
 ${job_cmd}
-
-# debug
-# sleep $(( $RANDOM % 10))
-# date +%H:%M:%S
