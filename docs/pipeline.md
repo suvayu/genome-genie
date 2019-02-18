@@ -15,7 +15,7 @@ reschedule jobs, or manage them as they are running.
 
 **Task dependencies** can be specified in a simple `list` like syntax.
 The dependency is only on the task start time.  The *dependency graph
-may be arbitrarily complex**.  As the pipeline is staged for
+may be arbitrarily complex*.  As the pipeline is staged for
 execution, independent tasks are *scheduled for execution in
 parallel*.
 
@@ -161,7 +161,10 @@ In the above specification, the pipeline is specified by the
 The general resource constraints for each job are specified by the
 sub-dictionary `"sge"`.  Different resource manager backends (`PBS`,
 `LSF`, etc) could be integrated by writing a template and passing the
-corresponding options in a similar dictionary.
+corresponding options in a similar dictionary.  In the above example,
+we ask `sge` to allocate for jobs each requiring 64 GB of RAM, and 6
+hours of CPU time.  We also allow for a physical runtime of 1 day.  We
+also need to specify the queue to submit to, and the log directory.
 
 For each task type in the pipeline, the options are provided as a
 sub-dictionary of the same name.  Certain job types may require to run
@@ -188,7 +191,7 @@ provide isolated environments between the different jobs.  So *if you
 need to run jobs in incompatible environments, you would need to run
 separate pipelines*.
 
-The templates are written in
+The task definition templates are written in
 [`Mako`](https://docs.makotemplates.org/en/latest/syntax.html).  More
 detailed instructions on how to write these templates can be found in
 [here](templates.md).
