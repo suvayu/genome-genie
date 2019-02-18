@@ -330,9 +330,11 @@ class BatchJob(object):
         self._template = template  # for __repr__
         self.setup = compile_template("module", package=" ".join(options["module"]))
         self.job_cmd = compile_template(template, **options)
-        jobopts = options[backend]
-        jobopts["memory"] = "{}".format(parse_bytes(jobopts["memory"]))
-        jobopts["name"] = f"{template}-{uuid4()}"
+        jobopts = {
+            **options[backend],
+            "memory": "{}".format(parse_bytes(options[backend]["memory"])),
+            "name": f"{template}-{uuid4()}",
+        }
         # TODO: check walltime and cputime format
         # TODO: check if queue is valid
         self.job_header = compile_template(backend, **jobopts)
