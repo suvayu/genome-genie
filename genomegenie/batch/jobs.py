@@ -69,7 +69,7 @@ class Pipeline(object):
 
     """
 
-    job_id_regexp = r"Your job (?P<job_id>\d+)"
+    job_id_regexp = r"(?P<job_id>\d+)"
 
     def __init__(self, options, backend="sge", submit_command="qsub -terse"):
         self.submit_command = submit_command
