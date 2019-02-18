@@ -28,7 +28,7 @@ from glom import glom, Coalesce
 from genomegenie.utils import add_class_property, flatten
 from genomegenie.batch.factory import compile_template
 
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def results(res, depth=3, cols=["jobid", "out", "err", "script"]):
@@ -119,9 +119,9 @@ class Pipeline(object):
 
         """
         cmd_str = " ".join(cmd)
-        # logger.debug(
-        #     "Executing the following command to command line\n{}".format(cmd_str)
-        # )
+        logger.debug(
+            "Executing the following command to command line\n{}".format(cmd_str)
+        )
 
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs
@@ -179,12 +179,21 @@ class Pipeline(object):
         # set of parallel tasks:
         # e.g.: ("foo", "bar", "baz"), ("foo", "bar", ["baz1", "baz2"])
         if isinstance(graph, tuple):
-            tasks = [
-                [submit(job, monitor_t, *args) for job in process(task)]
-                if isinstance(task, str)
-                else self.stage(task, process, submit, monitor_t, *args)
-                for task in graph
-            ]
+            # tasks = [
+            #     [submit(job, monitor_t, *args) for job in process(task)]
+            #     if isinstance(task, str)
+            #     else self.stage(task, process, submit, monitor_t, *args)
+            #     for task in graph
+            # ]
+            tasks = []
+            for task in graph:
+                jobs = (
+                    [submit(job, monitor_t, *args) for job in process(task)]
+                    if isinstance(task, str)
+                    else self.stage(task, process, submit, monitor_t, *args)
+                )
+                logger.debug(jobs)
+                tasks.append(jobs)
             return dask.delayed(tasks, nout=len(graph))
         # set of sequential tasks: may include nested set of parallel tasks
         # e.g.: ["foo1", "foo2", "foo3"], ["foo", ("bar1", "bar2"), "baz"]
@@ -254,7 +263,7 @@ class Pipeline(object):
         """
         with tmpfile(extension="sh") as fn:
             with open(fn, "w") as f:
-                # logger.debug(f"writing job script: {fn}\n{script}")
+                logger.debug(f"writing job script: {fn}\n{script}")
                 f.write(script)
             yield fn
 
