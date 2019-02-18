@@ -95,9 +95,66 @@ packages that are to be enabled by `module`.  The last ingredient that
 we need are the resource manager instructions (i.e. `qsub` options).
 Again, this is included as a dictionary in the final configuration.
 
-TODO: replace from the options in the test script
-
-    options = {}
+    options = {
+        "pipeline": [
+            (["pon_sample", "pon_consolidate", "gatk"], "muse"),
+            "variants",
+        ],
+        "module": ["gatk-4.0.4.0", "MuSE-1.0"],
+        "inputs": [
+            {
+                "normal_bam": "/path/to/normal1.bam",
+                "tumor_bam": "/path/to/tumor1.bam",
+            },
+            {
+                "normal_bam": "/path/to/normal2.bam",
+                "tumor_bam": "/path/to/tumor2.bam",
+            },
+        ],
+        "pon_sample": {
+            "ref_fasta": "/path/to/reference.fa",
+            "output": "/path/to/outputdir",
+            "db": "/path/to/genomedb.vcf.gz",
+            "exome_bed": "/path/to/exome.bed",  # optional
+            "nprocs": 4,
+        },
+        "pon_consolidate": {
+            "normals_list": "/path/to/outputdir/normals.txt",
+            "output": "/path/to/outputdir",
+            "db": "/path/to/genomedb.vcf.gz",
+            "pon": "/path/to/outputdir/pon.vcf.gz",
+            "nprocs": 4,
+        },
+        "gatk": {
+            "ref_fasta": "/path/to/reference.fa",
+            "output": "/path/to/outputdir",
+            "db": "/path/to/genomedb.vcf.gz",
+            "pon": "/path/to/outputdir/pon.vcf.gz",
+            "exome_bed": "/path/to/exome.bed",  # optional
+            "nprocs": 4,  # optional
+        },
+        "muse": {
+            "ref_fasta": "/path/to/reference.fa",
+            "output": "/path/to/outputdir",
+            "db": "/path/to/dbsnp.vcf.gz",
+            "exome_bed": "/path/to/exome.bed",  # optional
+        },
+        "variants": {
+            "inputs": [
+                {
+                    "gatk": "/path/to/outputdir/gatk-calls.vcf.gz",
+                    "muse": "/path/to/outputdir/muse-calls.vcf.gz",
+                }
+            ]
+        },
+        "sge": {
+            "queue": "dev.q",
+            "log_directory": "pipeline",
+            "walltime": "24:00:00",
+            "cputime": "06:00:00",
+            "memory": "64 GB",
+        },
+    }
 
 In the above specification, the pipeline is specified by the
 `"pipeline"` key.  The task dependencies have been explained before.
