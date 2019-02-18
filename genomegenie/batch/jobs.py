@@ -350,6 +350,7 @@ class BatchJob(object):
             **options[backend],
             "memory": "{}".format(parse_bytes(options[backend]["memory"])),
             "name": f"{template}-{uuid4()}",
+            "nprocs": options.get("nprocs", 1),
         }
         # TODO: check walltime and cputime format
         # TODO: check if queue is valid

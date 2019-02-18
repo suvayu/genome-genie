@@ -29,6 +29,7 @@ sge_opts = {
     "walltime": "00:30:00",
     "cputime": "00:30:00",
     "memory": "16 GB",
+    "nprocs": 2,
 }
 
 
