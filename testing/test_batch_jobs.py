@@ -82,9 +82,7 @@ def test_pipeline_process():
         },
     }
 
-    DummyCluster = namedtuple("DummyCluster", ["submit_command"])
-    cluster = DummyCluster("qsub")
-    pipeline = Pipeline(cluster, opts)
+    pipeline = Pipeline(opts)   # sge with qsub
 
     # check number of jobs (varies with different input overrides)
     jobs = pipeline.process("test_all")

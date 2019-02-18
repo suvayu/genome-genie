@@ -71,8 +71,8 @@ class Pipeline(object):
 
     job_id_regexp = r"Your job (?P<job_id>\d+)"
 
-    def __init__(self, cluster, options, backend="sge"):
-        self.submit_command = cluster.submit_command
+    def __init__(self, options, backend="sge", submit_command="qsub -terse"):
+        self.submit_command = submit_command
         self.graph = options["pipeline"]
         self.inputs = options["inputs"]
         self.options = options
