@@ -271,6 +271,8 @@ class Pipeline(object):
     @dask.delayed
     def submit(self, job, monitor_t, *args):
         """Submit and wait"""
+        print(job)
+        logger.debug(job)
         res = dict(script=job.script)
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
