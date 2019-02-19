@@ -9,6 +9,8 @@ from dask.distributed import Client
 
 from genomegenie.batch.jobs import Pipeline, results
 
+from test_batch_factory import _test_tmpl_dir_
+
 
 def test_pipeline_stage():
     graph = [(["foo", "bar"], "baz"), "whaat"]
@@ -83,6 +85,7 @@ def test_pipeline_process():
     }
 
     pipeline = Pipeline(opts)   # sge with qsub
+    pipeline.tmpl_dir = _test_tmpl_dir_
 
     # check number of jobs (varies with different input overrides)
     jobs = pipeline.process("test_all")

@@ -21,15 +21,17 @@ def template_dir():
     return f"{curdir}/templates"
 
 
-def compile_template(template, **options):
+def compile_template(template, tmpl_dir, **options):
     """Generate command string from Mako template and options"""
-    lookup = TemplateLookup(directories=[template_dir()], default_filters=[])
+    # dir_t = template_dir() if dir_t is None else dir_t
+    lookup = TemplateLookup(directories=[tmpl_dir], default_filters=[])
     try:
         template = lookup.get_template(template)
         return template.render(**options)
     except:
+        print(f"Failed to render '{template}' from '{tmpl_dir}':")
         print(text_error_template().render())
-        # raise
+        return ""
 
 
 def template_vars(template):

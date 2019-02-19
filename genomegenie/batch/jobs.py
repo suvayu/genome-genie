@@ -26,7 +26,7 @@ from distributed.utils import parse_bytes, tmpfile
 from glom import glom, Coalesce
 
 from genomegenie.utils import add_class_property, flatten
-from genomegenie.batch.factory import compile_template
+from genomegenie.batch.factory import compile_template, template_dir
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -73,11 +73,12 @@ class Pipeline(object):
     job_id_regexp = r"(?P<job_id>\d+)"
 
     def __init__(self, options, backend="sge", submit_command="qsub -terse"):
-        self.submit_command = submit_command
         self.graph = options["pipeline"]
         self.inputs = options["inputs"]
         self.options = options
+        self.tmpl_dir = template_dir()
         self.backend = backend
+        self.submit_command = submit_command
 
     def __repr__(self):
         res = f"""
@@ -236,7 +237,7 @@ class Pipeline(object):
             self.backend: self.options[self.backend],
         }
         if opts.get("inputs", None) == "ignore":
-            jobs = [BatchJob(task, opts, self.backend)]
+            jobs = [BatchJob(task, opts, self.tmpl_dir, self.backend)]
         elif opts.get("inputs", None) == "all":  # e.g. panel of normal
             keys = reduce(
                 lambda i, j: i.union(set(j)), [i.keys() for i in self.inputs], set()
@@ -246,11 +247,11 @@ class Pipeline(object):
             )
             for key in keys:  # filter out "no files" (shows as empty string above)
                 inputs[key] = [i for i in filter(None, inputs[key])]
-            jobs = [BatchJob(task, dict(**inputs, **opts), self.backend)]
+            jobs = [BatchJob(task, dict(**inputs, **opts), self.tmpl_dir, self.backend)]
         else:
             inputs = opts.get("inputs", self.inputs)  # allow overriding inputs per job
             jobs = [
-                BatchJob(task, dict(**infile, **opts), self.backend)
+                BatchJob(task, dict(**infile, **opts), self.tmpl_dir, self.backend)
                 for infile in inputs
             ]
         return jobs
@@ -308,6 +309,7 @@ class Pipeline(object):
 
 add_class_property(Pipeline, "graph")
 add_class_property(Pipeline, "options")
+add_class_property(Pipeline, "tmpl_dir")
 
 
 class BatchJob(object):
@@ -337,11 +339,13 @@ class BatchJob(object):
 
     """
 
-    def __init__(self, template, options, backend="sge"):
+    def __init__(self, template, options, tmpl_dir, backend="sge"):
         # pdb.set_trace()
         self._template = template  # for __repr__
-        self.setup = compile_template("module", package=" ".join(options["module"]))
-        self.job_cmd = compile_template(template, **options)
+        self.setup = compile_template(
+            "module", tmpl_dir, package=" ".join(options["module"])
+        )
+        self.job_cmd = compile_template(template, tmpl_dir, **options)
         jobopts = {
             **options[backend],
             "memory": "{}".format(parse_bytes(options[backend]["memory"])),
@@ -349,9 +353,10 @@ class BatchJob(object):
         }
         # TODO: check walltime and cputime format
         # TODO: check if queue is valid
-        self.job_header = compile_template(backend, **jobopts)
+        self.job_header = compile_template(backend, tmpl_dir, **jobopts)
         self.script = compile_template(
             "jobscript",
+            tmpl_dir,
             job_header=self.job_header,
             setup=self.setup,
             job_cmd=self.job_cmd,
