@@ -29,6 +29,7 @@ from genomegenie.utils import add_class_property, flatten
 from genomegenie.batch.factory import compile_template
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
 
 
 def results(res, depth=3, cols=["jobid", "out", "err", "script"]):
