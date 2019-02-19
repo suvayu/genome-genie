@@ -19,7 +19,7 @@ setup(
     ],
     packages=find_packages(exclude=["tests", "testing"]),
     setup_requires=["pytest-runner"],
-    tests_require=["pytest"],
+    tests_require=["pytest>=4.2"],
     # entry_points={"console_scripts": ["vcf2pq = genomegenie.cli:vcf2pq"]},
     package_data={"genomegenie.batch": ["templates/*"]},
     data_files=[("share/doc/genome-genie", ["README.md", "docs/pipeline.md"])],
