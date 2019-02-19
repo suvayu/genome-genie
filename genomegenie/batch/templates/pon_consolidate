@@ -17,3 +17,6 @@ $GATKHOME/gatk \
     CreateSomaticPanelOfNormals \
     -vcfs ${normals_list} \
     -O ${pon}
+% if nprocs is not UNDEFINED:
+    --native-pair-hmm-threads ${f'{nprocs}'}
+% endif

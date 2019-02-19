@@ -16,3 +16,6 @@ $GATKHOME/gatk \
 % if exome_bed is not UNDEFINED:
     -L ${exome_bed}
 % endif
+% if nprocs is not UNDEFINED:
+    --native-pair-hmm-threads ${f'{nprocs}'}
+% endif
