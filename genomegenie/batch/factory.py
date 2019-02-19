@@ -6,7 +6,7 @@
 
 """
 
-import os
+from pathlib import Path
 from importlib import import_module
 
 from mako.lookup import TemplateLookup
@@ -17,8 +17,7 @@ from genomegenie.utils import consume
 
 
 def template_dir():
-    curdir = os.path.dirname(os.path.realpath(__file__))
-    return f"{curdir}/templates"
+    return str(Path(__file__).parent / "templates")
 
 
 def compile_template(template, tmpl_dir, **options):
