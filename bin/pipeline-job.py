@@ -36,6 +36,7 @@ opts = {
         "output": str(datadir/gatk_dir),
         "db": str(datadir/genomedb),
         "exome_bed": str(exome_bed),
+        "nprocs": 4,
     },
     "pon_consolidate": {
         "normals_list": str(datadir/gatk_dir/normals),
@@ -66,7 +67,7 @@ opts = {
         "log_directory": "pipeline",
         "walltime": "24:00:00",
         "cputime": "06:00:00",
-        "memory": "64 GB",
+        "memory": "32 GB",
     },
 }
 
