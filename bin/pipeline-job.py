@@ -63,7 +63,7 @@ opts = {
         "inputs": [{"gatk": str(datadir/gatk_dir), "muse": str(datadir/muse_dir)}],
     },
     "sge": {
-        "queue": "dev.q",
+        "queue": "all.q",
         "log_directory": "pipeline",
         "walltime": "24:00:00",
         "cputime": "06:00:00",
