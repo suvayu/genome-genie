@@ -6,7 +6,7 @@ python:
 install:
   - pip install -q -r requirements.txt
 script:
-  - pytest
+  - pytest -ra
 branches:
   only:
     - master
