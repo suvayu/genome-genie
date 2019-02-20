@@ -14,7 +14,7 @@ $GATKHOME/gatk \
     -O ${path_transform(normal_bam, output) | bam2pon} \
     --germline-resource ${db} \
 % if exome_bed is not UNDEFINED:
-    -L ${exome_bed}
+    -L ${exome_bed} \
 % endif
 % if nprocs is not UNDEFINED:
     --native-pair-hmm-threads ${f'{nprocs}'}
