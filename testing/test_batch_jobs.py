@@ -76,11 +76,7 @@ def test_pipeline_process():
             {"normal_bam": "normal2.bam", "tumor_bam": "tumor2.bam"},
             {"normal_bam": "normal3.bam", "tumor_bam": "tumor3.bam"},
         ],
-        "test_all": {
-            "inputs": "all",
-            "normals_list": "normals.txt",
-            "pon": "pon.vcf",
-        },
+        "test_all": {"inputs": "all", "normals_list": "normals.txt", "pon": "pon.vcf"},
         "test_regular": {
             "ref_fasta": "reference.fasta",
             "output": "result.vcf.gz",
@@ -101,7 +97,7 @@ def test_pipeline_process():
         },
     }
 
-    pipeline = Pipeline(opts)   # sge with qsub
+    pipeline = Pipeline(opts)  # sge with qsub
     pipeline.tmpl_dir = _test_tmpl_dir_
 
     # check number of jobs (varies with different input overrides)
