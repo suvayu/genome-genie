@@ -9,7 +9,7 @@ from dask.distributed import Client
 
 from genomegenie.batch.jobs import Pipeline, results
 
-from test_batch_factory import _test_tmpl_dir_
+from .test_batch_factory import _test_tmpl_dir_
 
 
 def test_pipeline_stage():
