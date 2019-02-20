@@ -30,7 +30,9 @@ def pipeline_results():
 
     client = Client()
     staged = Pipeline.stage(graph, process, submit)
-    return results(staged.compute(), 4, ["name", "beg", "end"])
+    df = results(staged.compute(), 4, ["name", "beg", "end"])
+    client.close()
+    return df
 
 
 def test_pipeline_stage_seq_dep(pipeline_results):
