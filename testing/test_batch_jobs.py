@@ -1,3 +1,5 @@
+import os
+import pytest
 from time import sleep
 from datetime import datetime
 from itertools import product
@@ -12,7 +14,8 @@ from genomegenie.batch.jobs import Pipeline, results
 from .test_batch_factory import _test_tmpl_dir_
 
 
-def test_pipeline_stage():
+@pytest.fixture(scope="module")
+def pipeline_results():
     graph = [(["foo", "bar"], "baz"), "whaat"]
 
     def process(key):
@@ -27,8 +30,11 @@ def test_pipeline_stage():
 
     client = Client()
     staged = Pipeline.stage(graph, process, submit)
-    df = results(staged.compute(), 4, ["name", "beg", "end"])
+    return results(staged.compute(), 4, ["name", "beg", "end"])
 
+
+def test_pipeline_stage_seq_dep(pipeline_results):
+    df = pipeline_results
     foo = df.name.str.startswith("foo")
     bar = df.name.str.startswith("bar")
     baz = df.name.str.startswith("baz")
@@ -39,15 +45,26 @@ def test_pipeline_stage():
     t2 = df[bar].beg
     assert max(t1) < min(t2)
 
-    # baz starts before foo or bar ends
-    t1 = df[baz].beg
-    t2 = df[foo | bar].end
-    assert all(i > j for i, j in product(t2, t1))
-
     # whaat starts after the last of foo, bar, and baz ends
     t1 = df[foo | bar | baz].end
     t2 = df[wha].beg
     assert max(t1) < min(t2)
+
+
+@pytest.mark.skipif(
+    condition=len(os.sched_getaffinity(0)) < 3,
+    reason="Indeterminate in environments with very few threads",
+)
+def test_pipeline_stage_seq_dep(pipeline_results):
+    df = pipeline_results
+    foo = df.name.str.startswith("foo")
+    bar = df.name.str.startswith("bar")
+    baz = df.name.str.startswith("baz")
+
+    # baz starts before foo or bar ends
+    t1 = df[baz].beg
+    t2 = df[foo | bar].end
+    assert all(i > j for i, j in product(t2, t1))
 
 
 def test_pipeline_process():
