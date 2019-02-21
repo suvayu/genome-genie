@@ -76,7 +76,7 @@ opts = {
 logger = logging.getLogger()
 
 if __name__ == "__main__":
-    cluster = LocalCluster(processes=True)
+    cluster = LocalCluster(n_workers=4, processes=True)
     client = Client(cluster)
     logger.setLevel(logging.DEBUG)
     pipeline = Pipeline(opts)
