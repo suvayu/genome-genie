@@ -9,9 +9,8 @@
 from pathlib import Path
 from importlib import import_module
 
-from mako.lookup import TemplateLookup
-from mako import lexer, codegen
-from mako.exceptions import text_error_template
+from jinja2 import meta, FileSystemLoader, Environment
+from jinja2 import TemplateError, UndefinedError
 
 from genomegenie.utils import consume
 
@@ -20,17 +19,26 @@ def template_dir():
     return str(Path(__file__).parent / "templates")
 
 
-def compile_template(template, tmpl_dir, **options):
-    """Generate command string from Mako template and options"""
-    # dir_t = template_dir() if dir_t is None else dir_t
-    lookup = TemplateLookup(directories=[tmpl_dir], default_filters=[])
+def compile_template(template, tmpl_dirs, **options):
+    """Generate command string from Jinja2 template and options"""
+    loader = FileSystemLoader(searchpath=tmpl_dirs)
+    env = Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
+
+    # add custom filters to env
+    filters = import_module(".filters", "genomegenie.batch")
+    env.filters.update(
+        (k, getattr(filters, k)) for k in dir(filters) if not k.startswith("_")
+    )
+
     try:
-        template = lookup.get_template(template)
-        return template.render(**options)
-    except:
-        print(f"Failed to render '{template}' from '{tmpl_dir}':")
-        print(text_error_template().render())
-        return ""
+        template = env.get_template(template)
+        return template.render(options)
+    except TemplateError:
+        print(f"Failed to render '{template}' from '{tmpl_dirs}'")
+    except UndefinedError as err:
+        print(f"'{template}': {err}")
+
+    return ""
 
 
 def template_vars(template):
@@ -40,15 +48,11 @@ def template_vars(template):
 
 
 def template_vars_impl(template_str):
-    # see: https://stackoverflow.com/a/23577289
-    mylexer = lexer.Lexer(template_str)
-    node = mylexer.parse()
-    compiler = lambda: None  # dummy compiler
-    compiler.reserved_names = set()
-    options = codegen._Identifiers(compiler, node).undeclared
+    # see: https://stackoverflow.com/a/8284419/289784
+    env = Environment(trim_blocks=True, lstrip_blocks=True)
+    tmpl_ast = env.parse(template_str)
+    options = meta.find_undeclared_variables(tmpl_ast)
 
     filters = import_module(".filters", "genomegenie.batch")
-    consume(
-        map(options.discard, [k for k in dir(filters) if not k.startswith("_")])
-    )
+    consume(map(options.discard, [k for k in dir(filters) if not k.startswith("_")]))
     return options
