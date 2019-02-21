@@ -49,6 +49,6 @@ def template_vars_impl(template_str):
 
     filters = import_module(".filters", "genomegenie.batch")
     consume(
-        map(options.discard, [k for k in dir(filters) if not k.startswith("__")])
+        map(options.discard, [k for k in dir(filters) if not k.startswith("_")])
     )
     return options

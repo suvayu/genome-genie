@@ -2,11 +2,11 @@
 """Filters to be used in Mako templates"""
 
 
-import re
-import shlex
-import subprocess
-from functools import partial
-from pathlib import Path
+import re as _re
+import shlex as _shlex
+import subprocess as _subprocess
+from functools import partial as _partial
+from pathlib import Path as _Path
 
 
 def sample_name(filename, cmd_t="", debug=False):
@@ -16,13 +16,13 @@ def sample_name(filename, cmd_t="", debug=False):
 
     # collect samtools output
     cmd_t = cmd_t if cmd_t else f"samtools view -H {filename}"
-    res = subprocess.check_output(
-        shlex.split(cmd_t)
+    res = _subprocess.check_output(
+        _shlex.split(cmd_t)
     ).splitlines()
     # match something like this:
     # @RG  ID:Sample_01130111_BC2ULEACXX_L4  PL:Illumina  PU:C2ULEACXX.4  LB:01130111  SM:Sample_01130111
     anchor, sep, group = "^@RG", "\t", "([^\t]+)"
-    pattern = re.compile(sep.join([anchor] + [group] * 4 + [":".join([group] * 2)]))
+    pattern = _re.compile(sep.join([anchor] + [group] * 4 + [":".join([group] * 2)]))
     for line in res:
         found = pattern.search(line.decode("utf-8"))
         if found:  # match the first by convention
@@ -43,7 +43,7 @@ def path_transform(fname, destdir, ext=None):
     '/path/to/output/sample.vcf'
 
     """
-    fname, destdir = Path(fname), Path(destdir)
+    fname, destdir = _Path(fname), _Path(destdir)
     if ext is None:
         res = destdir / fname.name
     else:
@@ -70,10 +70,10 @@ def filename_filter(fname, ext1, ext2):
     return fname[: fname.rfind(ext1)] + ext2
 
 
-vcf2tsv = partial(filename_filter, ext1="vcf", ext2="tsv")
-vcf2bam = partial(filename_filter, ext1="vcf", ext2="bam")
-ungz = partial(filename_filter, ext1=".gz", ext2="")
-gz = partial(filename_filter, ext1="", ext2=".gz")
-bam2pon = partial(filename_filter, ext1=".bam", ext2="-pon.vcf.gz")
-bam2tsv = partial(filename_filter, ext1="bam", ext2="tsv")
-bam2vcf = partial(filename_filter, ext1="bam", ext2="vcf")
+vcf2tsv = _partial(filename_filter, ext1="vcf", ext2="tsv")
+vcf2bam = _partial(filename_filter, ext1="vcf", ext2="bam")
+ungz = _partial(filename_filter, ext1=".gz", ext2="")
+gz = _partial(filename_filter, ext1="", ext2=".gz")
+bam2pon = _partial(filename_filter, ext1=".bam", ext2="-pon.vcf.gz")
+bam2tsv = _partial(filename_filter, ext1="bam", ext2="tsv")
+bam2vcf = _partial(filename_filter, ext1="bam", ext2="vcf")
