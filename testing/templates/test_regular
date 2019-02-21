@@ -1,28 +1,24 @@
-<%!
-    from genomegenie.batch.filters import ungz, vcf2bam, sample_name
-%>
-
-$GATKHOME/gatk \
-% if javaopts is UNDEFINED:
-    --java-options '-Xmx64g' \
-% else:
-    --java-options ${javaopts} \
-% endif
-% if tumor_bam is UNDEFINED:
+$GATKHOME/gatk
+{%- if javaopts == undefined %}
+ --java-options '-Xmx64g' \
+{% else %}
+ --java-options {{ javaopts }} \
+{% endif %}
+{% if tumor_bam != undefined %}
     Mutect2 \
-    -I ${tumor_bam} -tumor ${sample_name(tumor_bam)} \
-    -I ${normal_bam} -normal ${sample_name(normal_bam)} \
-    --germline-resource ${db} \
-    --panel-of-normals ${pon} \
-% else:
+    -I {{ tumor_bam }} -tumor foo \
+    -I {{ normal_bam }} -normal bar \
+    --germline-resource {{ db }} \
+    --panel-of-normals {{ pon }} \
+{% else %}
     HaplotypeCaller \
-    -I ${normal_bam} \
-% endif
-    -R ${ref_fasta} \
-    -O ${output} -bamout ${output | ungz,vcf2bam} \
-% if exome_bed is not UNDEFINED:
-    -L ${exome_bed} \
-% endif
-% if nprocs is not UNDEFINED:
-    --native-pair-hmm-threads ${f'{nprocs}'}
-% endif
+    -I {{ normal_bam }} \
+{% endif %}
+    -R {{ ref_fasta }} \
+    -O {{ output }} -bamout baz \
+{% if exome_bed != undefined %}
+    -L {{ exome_bed }} \
+{% endif %}
+{% if nprocs != undefined %}
+    --native-pair-hmm-threads {{ nprocs }}
+{% endif %}
