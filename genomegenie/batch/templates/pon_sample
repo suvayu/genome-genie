@@ -1,21 +1,18 @@
-<%!
-    from genomegenie.batch.filters import bam2pon, sample_name, path_transform
-%>
-
 $GATKHOME/gatk \
-% if javaopts is UNDEFINED:
+{% if javaopts is undefined %}
     --java-options '-Xmx64g' \
-% else:
+{% else %}
     --java-options ${javaopts} \
-% endif
+{% endif %}
     Mutect2 \
-    -R ${ref_fasta} \
-    -I ${normal_bam} -tumor ${sample_name(normal_bam)} \
-    -O ${path_transform(normal_bam, output) | bam2pon} \
-    --germline-resource ${db} \
-% if exome_bed is not UNDEFINED:
-    -L ${exome_bed} \
-% endif
-% if nprocs is not UNDEFINED:
-    --native-pair-hmm-threads ${f'{nprocs}'}
-% endif
+    -R {{ ref_fasta }} \
+    -I {{ normal_bam }} \
+    -tumor $(sample_name {{ normal_bam }} ) \
+    -O {{ normal_bam | path_transform(output) | bam2pon }} \
+    --germline-resource {{ db }} \
+{% if exome_bed is not undefined %}
+    -L {{ exome_bed }} \
+{% endif %}
+{% if nprocs is not undefined %}
+    --native-pair-hmm-threads {{ nprocs }}
+{% endif %}

@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # job options
-${job_header}
+{{ job_header }}
 
 # setup
-${setup}
+{{ setup }}
+
 # helper function (needs samtools)
 function sample_name() {
     samtools view -H "$1" | grep -m1 "^@RG" | cut -f6 | cut -d: -f2
 }
 
 # job command
-${job_cmd}
+{{ job_cmd }}

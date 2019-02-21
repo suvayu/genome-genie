@@ -1,11 +1,11 @@
-<%!
-    from genomegenie.batch.filters import bam2tsv, bam2vcf, path_transform
-%>
+MuSE call -f {{ ref_fasta }} \
+    -O {{ normal_bam | path_transform(output) }} \
+    {{ tumor_bam }} {{ normal_bam }}
 
-MuSE call -f ${ref_fasta} \
--O ${path_transform(normal_bam, output) | bam2tsv} \
-${tumor_bam} ${normal_bam}
-
-MuSE sump -I ${path_transform(normal_bam, output) | bam2tsv} \
--O ${path_transform(normal_bam, output) | bam2vcf} -D ${db} \
-${'-G' if exome_bed is UNDEFINED else '-E'}
+MuSE sump -I {{ normal_bam | path_transform(output) ~ '.MuSE.txt'}} \
+    -O {{ normal_bam | path_transform(output) | bam2vcf }} -D {{ db }} \
+{% if exome_bed is undefined %}
+    -G
+{% else %}
+    -E
+{% endif %}

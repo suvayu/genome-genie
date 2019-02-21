@@ -1,9 +1,9 @@
 #
-#$ -N ${name}
-#$ -q ${queue}
+#$ -N {{ name }}
+#$ -q {{ queue }}
 #$ -j y
-#$ -o ${log_directory}/
-#$ -l h_rt=${walltime}
-#$ -l h_cpu=${cputime},h_vmem=${memory}
-#$ -pe smp ${f"{nprocs}"}
+#$ -o {{ log_directory }}/
+#$ -l h_rt={{ walltime }}
+#$ -l h_cpu={{ cputime }},h_vmem={{ memory }}
+#$ -pe smp {{ nprocs }}
 #
