@@ -347,13 +347,13 @@ class BatchJob(object):
 
     """
 
-    def __init__(self, template, options, tmpl_dir, backend="sge"):
+    def __init__(self, template, options, tmpl_dir, backend="sge", debug=False):
         # pdb.set_trace()
         self._template = template  # for __repr__
         self.setup = compile_template(
-            "module", tmpl_dir, package=" ".join(options["module"])
+            "module", tmpl_dir, debug, package=" ".join(options["module"])
         )
-        self.job_cmd = compile_template(template, tmpl_dir, **options)
+        self.job_cmd = compile_template(template, tmpl_dir, debug, **options)
         jobopts = {
             **options[backend],
             "memory": "{}".format(parse_bytes(options[backend]["memory"])),
@@ -362,10 +362,11 @@ class BatchJob(object):
         }
         # TODO: check walltime and cputime format
         # TODO: check if queue is valid
-        self.job_header = compile_template(backend, tmpl_dir, **jobopts)
+        self.job_header = compile_template(backend, tmpl_dir, debug, **jobopts)
         self.script = compile_template(
             "jobscript",
             tmpl_dir,
+            debug,
             job_header=self.job_header,
             setup=self.setup,
             job_cmd=self.job_cmd,
