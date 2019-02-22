@@ -75,12 +75,19 @@ opts = {
     },
 }
 
-logger = logging.getLogger()
+logger = logging.getLogger("genomegenie")
+handler = logging.StreamHandler()
+fmt = "{levelname}:{asctime}:{name}:{lineno}: {message}"
+formatter = logging.Formatter(fmt, style="{")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 if __name__ == "__main__":
+    logger.setLevel(logging.DEBUG)
+
     cluster = LocalCluster(n_workers=4, processes=True)
     client = Client(cluster)
-    logger.setLevel(logging.DEBUG)
+
     pipeline = Pipeline(opts)
     staged = pipeline.stage(
         pipeline.graph, pipeline.process, pipeline.submit, monitor_t=3600
