@@ -2,6 +2,8 @@ import pytest
 from pathlib import Path
 from textwrap import dedent
 
+from jinja2 import StrictUndefined
+
 from genomegenie.batch.factory import (template_vars_impl, compile_template, template_dir)
 
 
@@ -9,17 +11,17 @@ _test_tmpl_dir_ = str(Path(__file__).parent / "templates")
 
 
 def test_template_vars():
-    tmpl1 = """A list of vars: ${var1}, ${var2}"""
-    tmpl2 = """${'undefined' if var is UNDEFINED else 'defined'}"""
-    tmpl_w_pyblk = dedent("""
-    % if var is UNDEFINED:
-    something
-    % endif
+    tmpl1 = """A list of vars: {{ var1 }}, {{ var2 }}"""
+    tmpl2 = dedent("""
+    {% if var is undefined %}
+    undefined
+    {% else %}
+    defined
+    {% endif %}
     """)
 
     assert all(v in template_vars_impl(tmpl1) for v in ('var1', 'var2'))
     assert 'var' in template_vars_impl(tmpl2)
-    assert 'var' in template_vars_impl(tmpl_w_pyblk)
 
 
 sge_opts = {
@@ -40,7 +42,9 @@ sge_opts = {
     # test errors: wrong template, wrong template directory, bad options
     pytest.param("sge", "nonexistent", sge_opts, marks=pytest.mark.xfail),
     pytest.param("nonexistent", _test_tmpl_dir_, sge_opts, marks=pytest.mark.xfail),
-    pytest.param("sge", _test_tmpl_dir_, dict(), marks=pytest.mark.xfail),
+    # In the case of simple replacements, Jinja2 templates silently skips
+    # undefined variables, so enable strict undefined
+    pytest.param("sge", template_dir(), dict(debug=StrictUndefined), marks=pytest.mark.xfail),
 ])
 def test_compile_template(tmpl, tmpl_dir, opts):
     assert compile_template(tmpl, tmpl_dir, **opts)
