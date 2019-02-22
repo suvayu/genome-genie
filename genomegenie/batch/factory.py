@@ -6,6 +6,7 @@
 
 """
 
+import logging
 from pathlib import Path
 from importlib import import_module
 
@@ -21,28 +22,29 @@ from jinja2 import (
 
 from genomegenie.utils import consume
 
+logger = logging.getLogger(__name__)
+
 
 def template_dir():
     return str(Path(__file__).parent / "templates")
 
 
-def compile_template(template, tmpl_dirs, undefined_t=False, **options):
+def compile_template(template, tmpl_dirs, debug=False, **options):
     """Generate command string from Jinja2 template and options"""
     loader = FileSystemLoader(searchpath=tmpl_dirs)
 
-    if undefined_t is True:
-        # LoggingUndefined w/ it's own logger
-        # _logger = logging.getLogger(__name__)  # FIXME:
-        undefined_t = make_logging_undefined()
-    elif undefined_t is False:
+    if debug == False:
         undefined_t = Undefined
+    elif debug == True or not issubclass(debug, Undefined):
+        # LoggingUndefined w/ it's own logger
+        _logger = logging.getLogger(f"genomegenie.batch.templates.{template}")
+        undefined_t = make_logging_undefined(logger=_logger)
+        if debug != True:
+            # warn when debug was unknown custom undefined
+            logger.warning(f"Ignoring {debug}, not a subclass of Undefined")
     else:
-        try:
-            # custom undefined like DebugUndefined
-            assert issubclass(undefined_t, Undefined)
-        except AssertionError:
-            print(f"Ignoring {undefined_t}, not a subclass of Undefined")
-            undefined_t = Undefined
+        # custom undefined, e.g. DebugUndefined
+        undefined_t = debug
 
     env = Environment(
         loader=loader, trim_blocks=True, lstrip_blocks=True, undefined=undefined_t
@@ -58,9 +60,7 @@ def compile_template(template, tmpl_dirs, undefined_t=False, **options):
         template = env.get_template(template)
         return template.render(options)
     except TemplateError:
-        print(f"Failed to render '{template}' from '{tmpl_dirs}'")
-    except UndefinedError as err:
-        print(f"'{template}': {err}")
+        logger.error(f"Failed to render '{template}' from '{tmpl_dirs}'", exc_info=True)
 
     return ""
 
