@@ -29,7 +29,6 @@ from genomegenie.utils import add_class_property, flatten
 from genomegenie.batch.factory import compile_template, template_dir
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
 
 
 def results(res, depth=3, cols=["jobid", "out", "err", "script"]):
@@ -195,7 +194,6 @@ class Pipeline(object):
                     if isinstance(task, str)
                     else self.stage(task, process, submit, monitor_t, *args)
                 )
-                logger.debug(jobs)
                 tasks.append(jobs)
             return dask.delayed(tasks, nout=len(graph))
         # set of sequential tasks: may include nested set of parallel tasks
@@ -273,8 +271,9 @@ class Pipeline(object):
     @dask.delayed
     def submit(self, job, monitor_t, *args):
         """Submit and wait"""
-        print(job)
-        logger.debug(job)
+        # # FIXME: how to log from delayed functions?
+        # _logger = logging.getLogger(__name__)
+        # _logger.debug(job)
         res = dict(script=job.script)
 
         if self.debug:
@@ -323,7 +322,7 @@ add_class_property(Pipeline, "debug")
 class BatchJob(object):
     """Wrapper to generate, submit, and manage batch jobs.
 
-    template -- command template ("mytemplate" from above example)
+    template -- command template ("mytemplate" from example below)
 
     options -- dict: keys are templates, values are options
                Typically options are dictionaries, except for "module".
