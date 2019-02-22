@@ -10,5 +10,8 @@ script:
 branches:
   only:
     - master
+    - dask
+    - airflow
+    - variants
 git:
   quiet: true
