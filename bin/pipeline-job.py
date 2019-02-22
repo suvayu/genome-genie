@@ -28,8 +28,9 @@ exome_bed = Path(
 )
 
 opts = {
-    "pipeline": [(["pon_sample", "pon_consolidate", "gatk"], "muse"), "variants"],
-    "module": ["gatk-4.0.4.0", "MuSE-1.0"],
+    "pipeline": [(["pon_sample", "pon_consolidate", "gatk"], "muse"), # "variants"
+    ],
+    "module": ["samtools-1.9", "gatk-4.0.4.0", "MuSE-1.0"],
     "inputs": [
         dict((i, str(datadir / inputs / j)) for i, j in zip(bam_t, bam)) for bam in bams
     ],
@@ -41,6 +42,7 @@ opts = {
         "nprocs": 4,
     },
     "pon_consolidate": {
+        "inputs": "all",
         "normals_list": str(datadir / gatk_dir / normals),
         "output": str(datadir / gatk_dir),
         "db": str(datadir / genomedb),
