@@ -1,9 +1,9 @@
 dask>=1.1.1
 distributed>=1.25.3
 dask-jobqueue>=0.4.1
-mako>=1.0
 glom>=19
 pandas>=0.24
 pyarrow>=0.12
 pysam>=0.15
 pytest>=4.2
+jinja2>=2.10
