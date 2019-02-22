@@ -9,8 +9,15 @@
 from pathlib import Path
 from importlib import import_module
 
-from jinja2 import meta, FileSystemLoader, Environment
-from jinja2 import TemplateError, UndefinedError
+from jinja2 import (
+    meta,
+    FileSystemLoader,
+    Environment,
+    TemplateError,
+    UndefinedError,
+    make_logging_undefined,
+    Undefined,
+)
 
 from genomegenie.utils import consume
 
@@ -19,10 +26,27 @@ def template_dir():
     return str(Path(__file__).parent / "templates")
 
 
-def compile_template(template, tmpl_dirs, **options):
+def compile_template(template, tmpl_dirs, undefined_t=False, **options):
     """Generate command string from Jinja2 template and options"""
     loader = FileSystemLoader(searchpath=tmpl_dirs)
-    env = Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
+
+    if undefined_t is True:
+        # LoggingUndefined w/ it's own logger
+        # _logger = logging.getLogger(__name__)  # FIXME:
+        undefined_t = make_logging_undefined()
+    elif undefined_t is False:
+        undefined_t = Undefined
+    else:
+        try:
+            # custom undefined like DebugUndefined
+            assert issubclass(undefined_t, Undefined)
+        except AssertionError:
+            print(f"Ignoring {undefined_t}, not a subclass of Undefined")
+            undefined_t = Undefined
+
+    env = Environment(
+        loader=loader, trim_blocks=True, lstrip_blocks=True, undefined=undefined_t
+    )
 
     # add custom filters to env
     filters = import_module(".filters", "genomegenie.batch")
