@@ -79,6 +79,7 @@ class Pipeline(object):
         self.tmpl_dir = template_dir()
         self.backend = backend
         self.submit_command = submit_command
+        self.debug = False
 
     def __repr__(self):
         res = f"""
@@ -275,6 +276,12 @@ class Pipeline(object):
         print(job)
         logger.debug(job)
         res = dict(script=job.script)
+
+        if self.debug:
+            res.update(out="", err="", jobid=0)
+            time.sleep(3 * np.random.rand())
+            return res
+
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
             res["jobid"] = self._job_id_from_submit_output(res["out"])
@@ -310,6 +317,7 @@ class Pipeline(object):
 add_class_property(Pipeline, "graph")
 add_class_property(Pipeline, "options")
 add_class_property(Pipeline, "tmpl_dir")
+add_class_property(Pipeline, "debug")
 
 
 class BatchJob(object):
