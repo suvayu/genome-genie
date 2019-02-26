@@ -26,8 +26,7 @@ pon = Path("pon.vcf.gz")
 exome_bed = Path("exome_bed/TruSeq_exome_targeted_regions.hg19.bed")
 
 opts = {
-    "pipeline": [(["pon_sample", "pon_consolidate", "gatk"], "muse"), # "variants"
-    ],
+    "pipeline": (["pon_sample", "pon_consolidate", "gatk"], "muse"), # "variants"
     "module": ["samtools-1.9", "gatk-4.0.4.0", "MuSE-1.0"],
     "inputs": [
         dict((i, str(datadir / inputs / j)) for i, j in zip(bam_t, bam)) for bam in bams
