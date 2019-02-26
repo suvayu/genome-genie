@@ -83,7 +83,7 @@ logger.addHandler(handler)
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
-    cluster = LocalCluster(n_workers=4, processes=True)
+    cluster = LocalCluster(n_workers=4, processes=True, memory_limit="1GB")
     client = Client(cluster)
 
     pipeline = Pipeline(opts)
