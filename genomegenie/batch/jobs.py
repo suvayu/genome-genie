@@ -92,7 +92,8 @@ class Pipeline(object):
         """
         return dedent(res)
 
-    def _call(self, cmd, **kwargs):
+    @classmethod
+    def _call(self, cmd, raise_on_err=True, **kwargs):
         """Call a command using subprocess.Popen.
 
         (copied as is from JobQueueCluster, so that we can write a dummy
@@ -131,7 +132,7 @@ class Pipeline(object):
 
         out, err = proc.communicate()
         out, err = out.decode(), err.decode()
-        if proc.returncode != 0:
+        if raise_on_err and proc.returncode != 0:
             raise RuntimeError(
                 "Command exited with non-zero exit code.\n"
                 "Exit code: {}\n"
@@ -286,7 +287,9 @@ class Pipeline(object):
             res["jobid"] = self._job_id_from_submit_output(res["out"])
             err = False
             while monitor_t and not err:  # not err => running
-                out, err = self._call(shlex.split(f"qstat -j {res['jobid']}"))
+                out, err = self._call(
+                    shlex.split(f"qstat -j {res['jobid']}"), raise_on_err=False
+                )
                 time.sleep(monitor_t)
         return res
 

@@ -1,5 +1,6 @@
 import os
 import pytest
+import shlex
 from time import sleep
 from datetime import datetime
 from itertools import product
@@ -57,7 +58,7 @@ def test_pipeline_stage_seq_dep(pipeline_results):
     condition=len(os.sched_getaffinity(0)) < 3,
     reason="Indeterminate in environments with very few threads",
 )
-def test_pipeline_stage_seq_dep(pipeline_results):
+def test_pipeline_stage_par(pipeline_results):
     df = pipeline_results
     foo = df.name.str.startswith("foo")
     bar = df.name.str.startswith("bar")
@@ -117,3 +118,21 @@ def test_pipeline_process():
     jobs = pipeline.process("test_regular")
     assert jobs[0].script.find("mypkg")
     assert all([i not in jobs[0].script for i in pipeline.options["module"]])
+
+
+@pytest.mark.parametrize(
+    "cmd, raise_on_err",
+    [
+        (shlex.split("ls /tmp"), True),
+        pytest.param(
+            shlex.split("ls /nonexistent"),
+            True,
+            marks=pytest.mark.xfail(raises=RuntimeError),
+        ),
+        pytest.param(shlex.split("ls /nonexistent"), False, marks=pytest.mark.xfail),
+    ],
+)
+def test_pipeline_call(cmd, raise_on_err):
+    out, err = Pipeline._call(cmd, raise_on_err)
+    assert out
+    assert not err
