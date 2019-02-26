@@ -23,9 +23,7 @@ dbsnp = Path("dbsnp/dbsnp_138.hg19.vcf.gz")
 genomedb = Path("genomedb/af-only-gnomad.raw.sites.b37.vcf.gz")
 normals = Path("normals.txt")
 pon = Path("pon.vcf.gz")
-exome_bed = Path(
-    "/packages/AG4/DNAdragon/DATABASES/TruSeq_exome_targeted_regions.hg19.bed"
-)
+exome_bed = Path("exome_bed/TruSeq_exome_targeted_regions.hg19.bed")
 
 opts = {
     "pipeline": [(["pon_sample", "pon_consolidate", "gatk"], "muse"), # "variants"
@@ -38,7 +36,7 @@ opts = {
         "ref_fasta": str(datadir / ref),
         "output": str(datadir / gatk_dir),
         "db": str(datadir / genomedb),
-        "exome_bed": str(exome_bed),
+        "exome_bed": str(datadir / exome_bed),
         "nprocs": 4,
     },
     "pon_consolidate": {
@@ -54,14 +52,14 @@ opts = {
         "output": str(datadir / gatk_dir),
         "db": str(datadir / genomedb),
         "pon": str(datadir / gatk_dir / pon),
-        "exome_bed": str(exome_bed),
+        "exome_bed": str(datadir / exome_bed),
         "nprocs": 4,
     },
     "muse": {
         "ref_fasta": str(datadir / ref),
         "output": str(datadir / muse_dir),
         "db": str(datadir / dbsnp),
-        "exome_bed": str(exome_bed),
+        "exome_bed": str(datadir / exome_bed),
     },
     "variants": {
         "inputs": [{"gatk": str(datadir / gatk_dir), "muse": str(datadir / muse_dir)}]
