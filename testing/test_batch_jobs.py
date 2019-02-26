@@ -127,9 +127,13 @@ def test_pipeline_process():
         pytest.param(
             shlex.split("ls /nonexistent"),
             True,
-            marks=pytest.mark.xfail(raises=RuntimeError),
+            marks=pytest.mark.xfail(raises=RuntimeError, reason="Bad command, raises"),
         ),
-        pytest.param(shlex.split("ls /nonexistent"), False, marks=pytest.mark.xfail),
+        pytest.param(
+            shlex.split("ls /nonexistent"),
+            False,
+            marks=pytest.mark.xfail(reason="Bad command, no except"),
+        ),
     ],
 )
 def test_pipeline_call(cmd, raise_on_err):
