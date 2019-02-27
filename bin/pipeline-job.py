@@ -3,7 +3,8 @@ import logging
 
 from dask.distributed import Client, LocalCluster
 
-from genomegenie.batch.jobs import Pipeline, results
+from genomegenie.batch.jobs import Pipeline
+from genomegenie.utils import results
 
 
 datadir = Path("/packages/suvayu-testing")
@@ -90,5 +91,5 @@ if __name__ == "__main__":
         pipeline.graph, pipeline.process, pipeline.submit, monitor_t=3600
     )
     res = staged.compute()
-    df = results(res)
+    df = results(res, cols=["jobid", "out", "err", "script"])
     df.to_parquet("pipeline-output.parquet")

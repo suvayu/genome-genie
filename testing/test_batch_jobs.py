@@ -10,7 +10,8 @@ import numpy as np
 import dask
 from dask.distributed import Client
 
-from genomegenie.batch.jobs import Pipeline, results
+from genomegenie.batch.jobs import Pipeline
+from genomegenie.utils import results
 
 from .test_batch_factory import _test_tmpl_dir_
 
@@ -31,7 +32,7 @@ def pipeline_results():
 
     client = Client()
     staged = Pipeline.stage(graph, process, submit)
-    df = results(staged.compute(), 4, ["name", "beg", "end"])
+    df = results(staged.compute(), ["name", "beg", "end"])
     client.close()
     return df
 
