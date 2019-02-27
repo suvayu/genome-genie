@@ -80,6 +80,20 @@ def results(data, cols, depth=3):
 
         a dataframe with `cols` as columns
 
+    Examples
+    --------
+    >>> data = [
+    ...     [{"a": 1, "b": 10}, {"a": 2, "b": 20}],
+    ...     [[{"a": 3, "b": 30}, {"a": 4, "b": 40}], {"a": 5, "b": 50}],
+    ... ]
+    >>> results(data, ["a", "b"])
+       a   b
+    0  1  10
+    1  2  20
+    2  3  30
+    3  4  40
+    4  5  50
+
     """
 
     def _nest(key, depth):
