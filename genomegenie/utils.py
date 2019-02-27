@@ -5,6 +5,9 @@
 from collections import deque, Sequence
 from copy import deepcopy
 
+import pandas as pd
+from glom import glom, Coalesce
+
 
 def raise_if_not(items, obj, msg):
     for key in items:
@@ -49,6 +52,56 @@ def flatten(lst):
             yield from flatten(el)
         else:
             yield el
+
+
+def results(data, cols, depth=3):
+    """Convert the returned job status from a pipeline to a dataframe
+
+    Parameters
+    ----------
+    data : a doubly nested list of dictionaries
+
+        An example of how data looks like: [[{}, {}], [[{}, {}], {}]].  The top
+        two levels of nesting is mandatory, further nesting is handled by the
+        `depth` argument.
+
+    cols : iterable
+
+        List of keys to extract from the data
+
+    depth : int
+
+        Maximum depth (defaults to 3) to search for the list of keys beyond the
+        first two levels of nesting.
+
+    Returns
+    -------
+    pandas.DataFrame
+
+        a dataframe with `cols` as columns
+
+    """
+
+    def _nest(key, depth):
+        res = [key]
+        for i in range(depth):
+            res.append([res[-1]])
+        return res
+
+    return pd.DataFrame(
+        dict(
+            (
+                key,
+                [
+                    i
+                    for i in glom(
+                        data, ([[Coalesce(*_nest(key, depth), default="?")]], flatten)
+                    )
+                ],
+            )
+            for key in cols
+        )
+    )
 
 
 def add_class_property(cls, prop):
