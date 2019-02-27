@@ -241,19 +241,30 @@ class Pipeline(object):
     @dask.delayed
     def submit(self, job, monitor_t, *args):
         """Submit and wait"""
-        # # FIXME: how to log from delayed functions?
-        # _logger = logging.getLogger(__name__)
-        # _logger.debug(job)
+        logmsg = """
+        jobid: {jobid}
+
+        stdout:
+        {out}
+
+        stderr:
+        {err}
+
+        script:
+        {script}
+        """
         res = dict(script=job.script)
 
         if self.debug:
             res.update(out="", err="", jobid=0)
             time.sleep(3 * np.random.rand())
+            logger.debug(dedent(logmsg).format(**res))
             return res
 
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
             res["jobid"] = self._job_id_from_submit_output(res["out"])
+            logger.debug(dedent(logmsg).format(**res))
             err = False
             while monitor_t and not err:  # not err => running
                 out, err = self._call(
