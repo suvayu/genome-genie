@@ -31,6 +31,7 @@ class PrevItr(object):
     iterator.
 
     """
+
     def __init__(self, itr):
         self.itr = itr
         self.prev = None
