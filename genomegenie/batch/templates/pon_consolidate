@@ -12,7 +12,4 @@ $GATKHOME/gatk \
 {% endif %}
     CreateSomaticPanelOfNormals \
     -vcfs {{ normals_list }} \
-    -O {{ pon }} \
-{% if nprocs is not undefined %}
-    --native-pair-hmm-threads {{ nprocs }}
-{% endif %}
+    -O {{ pon }}

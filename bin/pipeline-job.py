@@ -45,7 +45,6 @@ opts = {
         "output": str(datadir / gatk_dir),
         "db": str(datadir / genomedb),
         "pon": str(datadir / gatk_dir / pon),
-        "nprocs": 4,
     },
     "gatk": {
         "ref_fasta": str(datadir / ref),
