@@ -2,11 +2,18 @@
 """Filters to be used in Mako templates"""
 
 
+import inspect
+import logging
 import re as _re
 import shlex as _shlex
 import subprocess as _subprocess
 from functools import partial as _partial
 from pathlib import Path as _Path
+
+from jinja2 import Undefined
+
+
+logger = logging.getLogger(__name__)
 
 
 def path_transform(fname, destdir, ext=None):
@@ -22,11 +29,29 @@ def path_transform(fname, destdir, ext=None):
     '/path/to/output/sample.vcf'
 
     """
-    fname, destdir = _Path(fname), _Path(destdir)
-    if ext is None:
+    try:
+        fname, destdir = _Path(fname), _Path(destdir)
+    except TypeError as err:
+        logger.error(
+            f"Undefined argument to {inspect.stack()[0].function}: "
+            f"{repr(fname)}, {repr(destdir)}\n{err}"
+        )
+        # # alternate implementation: pass on undefined to the next step
+        # for i in [fname, destdir]:
+        #     if isinstance(i, Undefined):
+        #         return i
+        return ""
+
+    if ext is None or isinstance(ext, Undefined):
         res = destdir / fname.name
+        if isinstance(ext, Undefined):
+            logger.warning(
+                f"Ignoring undefined argument to "
+                f"{inspect.stack()[0].function}: 'ext'"
+            )
     else:
         res = destdir / (fname.stem + f".{ext}")
+
     return str(res)
 
 
@@ -46,7 +71,14 @@ def filename_filter(fname, ext1, ext2):
     'sample-pon.vcf.gz'
 
     """
-    return fname[: fname.rfind(ext1)] + ext2
+    try:
+        return fname[: fname.rfind(ext1)] + ext2
+    except TypeError as err:
+        logger.error(
+            f"Undefined argument to {inspect.stack()[0].function}: "
+            f"{repr(fname)}, {repr(ext1)}, {repr(ext2)}"
+        )
+        return ""
 
 
 vcf2tsv = _partial(filename_filter, ext1="vcf", ext2="tsv")
