@@ -9,27 +9,6 @@ from functools import partial as _partial
 from pathlib import Path as _Path
 
 
-def sample_name(filename, cmd_t="", debug=False):
-    """Read the sample name from a BAM file using samtools"""
-    if debug:
-        return f"{filename}_name"
-
-    # collect samtools output
-    cmd_t = cmd_t if cmd_t else f"samtools view -H {filename}"
-    res = _subprocess.check_output(
-        _shlex.split(cmd_t)
-    ).splitlines()
-    # match something like this:
-    # @RG  ID:Sample_01130111_BC2ULEACXX_L4  PL:Illumina  PU:C2ULEACXX.4  LB:01130111  SM:Sample_01130111
-    anchor, sep, group = "^@RG", "\t", "([^\t]+)"
-    pattern = _re.compile(sep.join([anchor] + [group] * 4 + [":".join([group] * 2)]))
-    for line in res:
-        found = pattern.search(line.decode("utf-8"))
-        if found:  # match the first by convention
-            break
-    return found.group(6)
-
-
 def path_transform(fname, destdir, ext=None):
     """Rename a file path to a different directory.
 
