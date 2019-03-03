@@ -1,10 +1,11 @@
-import pytest
+from copy import deepcopy
 from pathlib import Path
 from textwrap import dedent
 
+import pytest
 from jinja2 import StrictUndefined
 
-from genomegenie.batch.factory import (template_vars_impl, compile_template, template_dir)
+from genomegenie.batch.factory import template_vars_impl, compile_template, template_dir
 
 
 _test_tmpl_dir_ = str(Path(__file__).parent / "templates")
@@ -12,16 +13,18 @@ _test_tmpl_dir_ = str(Path(__file__).parent / "templates")
 
 def test_template_vars():
     tmpl1 = """A list of vars: {{ var1 }}, {{ var2 }}"""
-    tmpl2 = dedent("""
+    tmpl2 = dedent(
+        """
     {% if var is undefined %}
     undefined
     {% else %}
     defined
     {% endif %}
-    """)
+    """
+    )
 
-    assert all(v in template_vars_impl(tmpl1) for v in ('var1', 'var2'))
-    assert 'var' in template_vars_impl(tmpl2)
+    assert all(v in template_vars_impl(tmpl1) for v in ("var1", "var2"))
+    assert "var" in template_vars_impl(tmpl2)
 
 
 sge_opts = {
@@ -35,16 +38,44 @@ sge_opts = {
 }
 
 
-@pytest.mark.parametrize("tmpl, tmpl_dir, opts", [
-    # test changing template directory
-    ("sge", template_dir(), sge_opts),
-    ("sge", _test_tmpl_dir_, sge_opts),
-    # test errors: wrong template, wrong template directory, bad options
-    pytest.param("sge", "nonexistent", sge_opts, marks=pytest.mark.xfail),
-    pytest.param("nonexistent", _test_tmpl_dir_, sge_opts, marks=pytest.mark.xfail),
-    # In the case of simple replacements, Jinja2 templates silently skips
-    # undefined variables, so enable strict undefined
-    pytest.param("sge", template_dir(), dict(debug=StrictUndefined), marks=pytest.mark.xfail),
-])
-def test_compile_template(tmpl, tmpl_dir, opts):
-    assert compile_template(tmpl, tmpl_dir, **opts)
+# test changing template directory
+@pytest.mark.parametrize("tmpl_dir", [template_dir(), _test_tmpl_dir_,])
+def test_compile_template(tmpl_dir):
+    assert compile_template("sge", tmpl_dir, **sge_opts)
+
+
+def test_compile_template_loggingundefined(caplog):
+    opts = deepcopy(sge_opts)
+    opts.pop("nprocs")
+    assert compile_template("sge", template_dir(), True, **opts)
+
+    for record in caplog.records:
+        assert record.levelname == "WARNING"
+
+
+# In the case of simple replacements, Jinja2 templates silently skips
+# undefined variables, so enable strict undefined
+def test_compile_template_strictundefined(caplog):
+    opts = deepcopy(sge_opts)
+    opts.pop("nprocs")
+    compile_template("sge", template_dir(), StrictUndefined, **opts)
+
+    assert "UndefinedError" in caplog.text
+    for record in caplog.records:
+        assert record.levelname == "ERROR"
+
+
+@pytest.mark.parametrize(
+    "tmpl, tmpl_dir",
+    [
+        # wrong template, wrong template directory, bad options
+        pytest.param("sge", "nonexistent"),
+        pytest.param("nonexistent", _test_tmpl_dir_),
+    ],
+)
+def test_compile_template_render_err(caplog, tmpl, tmpl_dir):
+    compile_template(tmpl, tmpl_dir, **sge_opts)
+
+    assert "Failed to render" in caplog.text
+    for record in caplog.records:
+        assert record.levelname == "ERROR"
