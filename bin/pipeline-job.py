@@ -30,6 +30,10 @@ if __name__ == "__main__":
 
     with open(opts.options, "r") as jsonfile:
         jobopts = json.load(jsonfile)
+        # prepend input dir to sample filenames
+        for infiles in jobopts["inputs"]:
+            for key, value in infiles.items():
+                infiles[key] = f"{jobopts['inputdir']}/{value}"
 
     debug = opts.debug
     loglevel = "DEBUG" if debug else opts.log_level
