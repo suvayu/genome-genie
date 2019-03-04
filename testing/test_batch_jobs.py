@@ -71,7 +71,8 @@ def test_pipeline_stage_par(pipeline_results):
     assert all(i > j for i, j in product(t2, t1))
 
 
-def test_pipeline_process():
+@pytest.fixture(scope="module")
+def pipeline():
     opts = {
         "pipeline": [],
         "module": ["pkg1", "pkg2"],
@@ -102,7 +103,13 @@ def test_pipeline_process():
     }
 
     pipeline = Pipeline(opts)  # sge with qsub
+    # pipeline.debug = True
     pipeline.tmpl_dir = _test_tmpl_dir_
+    return pipeline
+
+
+def test_pipeline_process(pipeline):
+    opts = pipeline.options
 
     # check number of jobs (varies with different input overrides)
     jobs = pipeline.process("test_all")
@@ -128,12 +135,14 @@ def test_pipeline_process():
         pytest.param(
             shlex.split("ls /nonexistent"),
             True,
-            marks=pytest.mark.xfail(raises=RuntimeError, reason="Bad command, raises"),
+            marks=pytest.mark.xfail(
+                raises=RuntimeError, reason="Bad command, raises an exception"
+            ),
         ),
         pytest.param(
             shlex.split("ls /nonexistent"),
             False,
-            marks=pytest.mark.xfail(reason="Bad command, no except"),
+            marks=pytest.mark.xfail(reason="Bad command, no exception"),
         ),
     ],
 )
