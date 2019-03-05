@@ -48,7 +48,7 @@ for i in range(0, 316, batchsize):
                 executor,
                 to_arrow,
                 vfname,
-                ("20", j * 200_000, (j + 1) * 200_000),
+                (f"{chrom}", j * 200_000, (j + 1) * 200_000),
                 cols,
             )
             for j in range(i, i + batchsize)
