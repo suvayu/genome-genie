@@ -115,8 +115,11 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
 def to_parquet(pqwriter, batches):
     """Persist list of `RecordBatch`es to a parquet file
 
-    pqwriter -- parquet output file writer
-    batches  -- list of `RecordBatch`es to persist
+    Parameters
+    ----------
+    pqwriter : `pyarrow.parquet.ParquetWriter`
+    batches : list of `RecordBatch`es
+        pyarrow record batches to persist
 
     """
     tbl = pa.Table.from_batches(batches)
