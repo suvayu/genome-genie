@@ -63,13 +63,22 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
     reasonable alternatives; which might come at a cost.  For example, Pandas
     does not support NULLs, and a likely replacement would be numpy.na.  This
     means you firstly lose zero-copy conversion, and possibly convert the field
-    type to a float!  Beware.
+    type to a float!  Beware!
 
-    vfname      -- Variant file name to be opened with `VariantFile`
-    batchparams -- Parameters to get VariantRecord batch iterator
-    cols        -- Record column spec (as returned by get_vcf_cols(..))
+    Parameters
+    ----------
+    vfname : string
+        Variant file name to be opened with `VariantFile`
+    batchparams : tuple
+        Parameters to get VariantRecord batch iterator
+    cols : dictionary (column name -> PyArrow type mapping)
+        Record column spec (as returned by get_vcf_cols(..))
+    nested_props : list
+        List of columns with nested properties
 
-    returns list of `RecordBatch`es
+    Returns
+    -------
+    list of `pyarrow.RecordBatch`es
 
     """
     batch = []
@@ -78,8 +87,7 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
         # break compatibility with VCF file column header: ALT -> ALTS.
         # INFO_* fields are filtered out as they are handled separately later.
         row = OrderedDict(
-            (c, getattr(vrec, c.lower()))
-            for c in cols if c in _simple_vcf_cols
+            (c, getattr(vrec, c.lower())) for c in cols if c in _simple_vcf_cols
         )
         # vrec.{prop}: [('<filter>', <pysam.libcbcf.VariantMetadata>)]
         row.update(
@@ -91,7 +99,7 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
         # reverse the layout: fmt in sample -> sample in fmt.  this way
         # for a given FORMAT field, all samples will be in adjacent blocks.
         row.update(
-            (f"{fmt}_{sample.name}", (int(sample.phased), *sample.values()[i]))
+            (f"{fmt}_{sample.name}", sample.values()[i])
             for i, fmt in enumerate(row["FORMAT"])
             for sample in vrec.samples.values()
         )
@@ -99,14 +107,9 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
         # indexing relies on the fixed ordering of FORMAT field values.
         batch.append(row)
     vf.close()  # FIXME:
-    # from pprint import pprint
-    # pprint(batch[-1])
     # populate as struct -> flatten
     batch = pa.array(batch, type=pa.struct(cols)).flatten()
     return pa.RecordBatch.from_arrays(batch, pa.schema(cols))
-
-
-to_arrow1 = to_arrow
 
 
 def to_parquet(pqwriter, batches):
