@@ -126,7 +126,71 @@ def to_parquet(pqwriter, batches):
     pqwriter.write_table(tbl, row_group_size=15000)
 
 
-def to_dask_df(
+_doc_to_df = f"""Read data from a VCF file into a DataFrame in chunks.
+
+    Returns an iterator so that the caller does not have to allocate huge
+    chunks of memory at once.  If the resulting dataframes are small, they
+    maybe concatenated using `pandas.concat`.  To convert to a distributed
+    (dask) dataframe, use `to_dask_df`.
+
+    Parameters
+    ----------
+    input : string or file-like
+        {_doc_param_input}
+
+    fields : list of strings, optional
+        {_doc_param_fields}
+
+    exclude_fields : list of strings, optional
+        {_doc_param_exclude_fields}
+
+    rename_fields : dict[str -> str], optional
+        {_doc_param_rename_fields}
+
+    types : dict, optional
+        {_doc_param_types}
+
+    numbers : dict, optional
+        {_doc_param_numbers}
+
+    alt_number : int, optional
+        {_doc_param_alt_number}
+
+    fills : dict, optional
+        {_doc_param_fills}
+
+    region : string, optional
+        {_doc_param_region}
+
+    tabix : string, optional
+        {_doc_param_tabix}
+
+    samples : list of strings
+        {_doc_param_samples}
+
+    transformers : list of transformer objects, optional
+        {_doc_param_transformers}
+
+    buffer_size : int, optional
+        {_doc_param_buffer_size}
+
+    chunk_length : int, optional
+        {_doc_param_chunk_length}
+
+    log : file-like, optional
+        {_doc_param_log}
+
+    **kwargs : extra keyword arguments
+        the extra arguments are passed on to `dask.dataframe.concat`
+
+    Returns
+    -------
+    df : iterator over pandas.DataFrame
+
+    """
+
+
+def to_df(
     input,
     fields=None,
     exclude_fields=None,
@@ -144,64 +208,6 @@ def to_dask_df(
     log=None,
     **kwargs,
 ):
-    """Read data from a VCF file into a dask DataFrame.
-
-    Parameters
-    ----------
-    input : string or file-like
-        {input}
-
-    fields : list of strings, optional
-        {fields}
-
-    exclude_fields : list of strings, optional
-        {exclude_fields}
-
-    rename_fields : dict[str -> str], optional
-        {rename_fields}
-
-    types : dict, optional
-        {types}
-
-    numbers : dict, optional
-        {numbers}
-
-    alt_number : int, optional
-        {alt_number}
-
-    fills : dict, optional
-        {fills}
-
-    region : string, optional
-        {region}
-
-    tabix : string, optional
-        {tabix}
-
-    samples : list of strings
-        {samples}
-
-    transformers : list of transformer objects, optional
-        {transformers}
-
-    buffer_size : int, optional
-        {buffer_size}
-
-    chunk_length : int, optional
-        {chunk_length}
-
-    log : file-like, optional
-        {log}
-
-    **kwargs : extra keyword arguments
-        the extra arguments are passed on to `dask.dataframe.concat`
-
-    Returns
-    -------
-    df : dask.dataframe.DataFrame
-
-    """
-
     store_samples, fields = _prep_fields_param(fields)
 
     # setup
@@ -230,7 +236,7 @@ def to_dask_df(
     if log is not None:
         chunk_itr = _chunk_iter_progress(chunk_itr, log, prefix="[to_dask_df]")
 
-    # read chunks and convert to dask dataframe
+    # read chunks and convert to pandas dataframe
     ddfs = []
     for _chunk in chunk_itr:
         # VCFChunkIterator returns: chunk, chunk_length, chrom, pos
@@ -257,27 +263,6 @@ def to_dask_df(
                 )
             else:
                 print("Whoa!")
-        ddfs.append(dd.from_pandas(pd.DataFrame(output), npartitions=1))
+        yield pd.DataFrame(output)
 
-    ddf = dd.concat(ddfs, axis=0, interleave_partitions=True, **kwargs)
-
-    return ddf
-
-
-to_dask_df.__doc__ = to_dask_df.__doc__.format(
-    input=_doc_param_input,
-    fields=_doc_param_fields,
-    exclude_fields=_doc_param_exclude_fields,
-    rename_fields=_doc_param_rename_fields,
-    types=_doc_param_types,
-    numbers=_doc_param_numbers,
-    alt_number=_doc_param_alt_number,
-    fills=_doc_param_fills,
-    region=_doc_param_region,
-    tabix=_doc_param_tabix,
-    samples=_doc_param_samples,
-    transformers=_doc_param_transformers,
-    buffer_size=_doc_param_buffer_size,
-    chunk_length=_doc_param_chunk_length,
-    log=_doc_param_log,
-)
+to_df.__doc__ = _doc_to_df
