@@ -266,3 +266,38 @@ def to_df(
         yield pd.DataFrame(output)
 
 to_df.__doc__ = _doc_to_df
+
+
+def to_dask_df(df_itr, axis=0, npartitions=1, **kwargs):
+    """Concatenates a sequence of pandas.DataFrames to make a dask.DataFrame.
+
+    Parameters
+    ----------
+    df_itr : iterator/generator
+        Iterator over a sequence of `pandas.DataFrame`s
+
+    axis : 0 or 1 (default: 0)
+        Axis along which the dataframes are concatenated (by default,
+        concatenated along rows)
+
+    npartitions : positive integer (default: 1)
+        Number of partitions to split a dataframe into when creating a
+        distributed dataframe
+
+    **kwargs : other keyword arguments
+        Keyword arguments passed on to dask.concat
+
+    Returns
+    -------
+    df : dask.dataframe.DataFrame
+        Note, the call to dask.concat already specifies
+        interleave_partitions=True, which is the dask equivalent of
+        ignore_index=True.
+
+    """
+    return dd.concat(
+        [dd.from_pandas(df, npartitions=npartitions) for df in df_itr],
+        axis=axis,
+        interleave_partitions=True,
+        **kwargs,
+    )
