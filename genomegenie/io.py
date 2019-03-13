@@ -9,6 +9,7 @@
 
 """
 
+import logging
 from collections import OrderedDict
 
 import pyarrow as pa
@@ -43,6 +44,9 @@ from allel.io.vcf_read import (
 )
 
 from genomegenie.schemas import _simple_vcf_cols
+
+
+logger = logging.getLogger(__name__)
 
 
 def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
@@ -262,7 +266,7 @@ def to_df(
                     for i, sample in enumerate(samples)
                 )
             else:
-                print("Whoa!")
+                logger.warning(f"Whoa! Unknown key: {key}")
         yield pd.DataFrame(output)
 
 to_df.__doc__ = _doc_to_df
