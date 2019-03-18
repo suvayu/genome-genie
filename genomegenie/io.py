@@ -116,6 +116,19 @@ def to_arrow(vfname, batchparams, cols, nested_props=("FILTER", "FORMAT")):
     return pa.RecordBatch.from_arrays(batch, pa.schema(cols))
 
 
+def arrow_to_df(vfname):
+    """Read VCF into pandas dataframe"""
+    vf = VariantFile(vfname, mode="r")
+    hdr, samples = get_header(vf)
+    cols = get_vcf_cols(hdr, samples)
+    nested_props=("FILTER", "FORMAT")
+
+    # FIXME: read in batches
+    batch = to_arrow(vfname, tuple(), cols)
+    tbl = pa.Table.from_batches([batch])
+    return tbl.to_pandas()
+
+
 def to_parquet(pqwriter, batches):
     """Persist list of `RecordBatch`es to a parquet file
 
