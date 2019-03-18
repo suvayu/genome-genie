@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="genome-genie",
-    version="0.dev1",
+    version="0.1",
     description="Data pipelining toolset for Genomics",
     author="Suvayu Ali",
     license="GPLv3",
