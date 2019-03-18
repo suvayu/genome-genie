@@ -56,7 +56,7 @@ with any number of optional arguments.
 The above snippet converts a list of names into a comma-separated
 string of names.  If we need custom filters, we can write them to
 match the signature: `myfilter(value, opt1=val1, opt2=val2, ...)`, and
-put them in [filters.py](../genomegenie/batch/filters.py**, and they
+put them in [filters.py](../genomegenie/batch/filters.py), and they
 will be automatically available in all our templates.  You may see
 that file for some examples.
 
