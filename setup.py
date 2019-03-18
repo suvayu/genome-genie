@@ -2,15 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="genome-genie",
-    version="0.dev0",
-    description="Genomics toolkit for Python",
+    version="0.dev1",
+    description="Data pipelining toolset for Genomics",
     author="Suvayu Ali",
     license="GPLv3",
     python_requires="~=3.6",
     install_requires=[
         "dask",
         "distributed",
-        "dask-jobqueue",
         "glom>=19",
         "pandas>=0.24",
         "pyarrow>=0.12",
