@@ -53,12 +53,11 @@ This is discussed in detail below.
 ## Specifying tasks
 
 Every task is defined with a *Jinja2 template*.
-[Jinja2](http://jinja.pocoo.org/docs/2.10/templates/) is one of two
-major template frameworks available in the Python ecosystem.  It
-combines text substitution with the flexibility of customisation with
-the help of Python functions.  This allows us to write in a language
-where we have *access to faculties of both shell scripting and
-Python*.
+[Jinja2](http://jinja.pocoo.org/docs/2.10/) is one of two major
+template frameworks available in the Python ecosystem.  It combines
+text substitution with the flexibility of customisation with the help
+of Python functions.  This allows us to write in a language where we
+have *access to faculties of both shell scripting and Python*.
 
 Each template has a list of variables associated with it.  These can
 be specified in the pipeline definition as a Python `dictionary`.  A
