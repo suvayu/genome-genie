@@ -13,4 +13,5 @@
 - `mako`
 - `glom`
 - `pyarrow`
+- `scikit-allel`
 - `pysam`
