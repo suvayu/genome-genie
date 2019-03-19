@@ -2,7 +2,7 @@ $GATKHOME/gatk \
 {% if javaopts is undefined %}
     --java-options '-Xmx64g' \
 {% else %}
-    --java-options ${javaopts} \
+    --java-options {{ javaopts }} \
 {% endif %}
     Mutect2 \
     -R {{ ref_fasta }} \
