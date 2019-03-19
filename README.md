@@ -34,3 +34,11 @@
 - To update (if you have not made any local changes), simply run:
 
         $ git pull
+
+- Install Genome Genie
+
+        $ cd genome-genie
+		$ pip3 install [--user] . -e
+		
+  The `-e` will allow you to update Genome Genie easily (no need to
+  install again).
