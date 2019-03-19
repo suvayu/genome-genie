@@ -2,8 +2,8 @@
 """Filters to be used in Mako templates"""
 
 
-import inspect
-import logging
+import inspect as _inspect
+import logging as _logging
 import re as _re
 import shlex as _shlex
 import subprocess as _subprocess
@@ -13,7 +13,7 @@ from pathlib import Path as _Path
 from jinja2 import Undefined
 
 
-logger = logging.getLogger(__name__)
+_logger = _logging.getLogger(__name__)
 
 
 def path_transform(fname, destdir, ext=None):
@@ -32,8 +32,8 @@ def path_transform(fname, destdir, ext=None):
     try:
         fname, destdir = _Path(fname), _Path(destdir)
     except TypeError as err:
-        logger.error(
-            f"Undefined argument to {inspect.stack()[0].function}: "
+        _logger.error(
+            f"Undefined argument to {_inspect.stack()[0].function}: "
             f"{repr(fname)}, {repr(destdir)}\n{err}"
         )
         # # alternate implementation: pass on undefined to the next step
@@ -45,9 +45,9 @@ def path_transform(fname, destdir, ext=None):
     if ext is None or isinstance(ext, Undefined):
         res = destdir / fname.name
         if isinstance(ext, Undefined):
-            logger.warning(
+            _logger.warning(
                 f"Ignoring undefined argument to "
-                f"{inspect.stack()[0].function}: 'ext'"
+                f"{_inspect.stack()[0].function}: 'ext'"
             )
     else:
         res = destdir / (fname.stem + f".{ext}")
