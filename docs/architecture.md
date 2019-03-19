@@ -36,7 +36,7 @@ debugging hooks, and an aggregated logging system for diagnosis.
 
 ---
 
-# Note for developers
+### Note for developers
 
 Almost all parent dictionary keys in the pipeline configuration
 represent a template behind the scenes; so almost everything is
