@@ -1,5 +1,12 @@
 # coding=utf-8
-"""Filters to be used in Mako templates"""
+"""Filters to be used in Jinja2 templates
+
+Convention: all names that are not filters, are expected to be in an internal
+namespace starting with an underscore ('_').  So if you write a new filter, you
+should name it normally, i.e. starting with an alphabet ('[a-zA-Z]*'), but any
+global names that are not filters should start with an underscore: '_*'.
+
+"""
 
 
 import inspect as _inspect
