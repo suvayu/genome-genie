@@ -4,6 +4,7 @@
 
 import json
 import logging
+from pathlib import Path
 from argparse import ArgumentParser
 
 from dask.distributed import Client, LocalCluster
@@ -23,6 +24,12 @@ parser.add_argument("-d", "--debug", action="store_true")
 parser.add_argument(
     "-t", "--template-dir", default=template_dir(), help="Template directory"
 )
+
+
+def contents(jobid, logdir):
+    matches = [i for i in Path(logdir).absolute().glob(f"*.o{jobid}")]
+    assert 1 == len(matches)
+    return matches[0].read_text()
 
 
 if __name__ == "__main__":
@@ -59,6 +66,10 @@ if __name__ == "__main__":
     )
     res = staged.compute()
     df = results(res, cols=["script"] if debug else ["jobid", "out", "err", "script"])
+
+    # get logs
+    df.assign(log=df.jobid.apply(get_contents, args=(jobopts["sge"]["log_directory"],)))
+
     df.to_parquet("pipeline-scripts.parquet")
     logger.info("Wrote scripts to 'pipeline-scripts.parquet'")
     logger.debug("Summary:\n" + df.to_string())
