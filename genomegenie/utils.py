@@ -5,6 +5,7 @@ import re
 from collections import deque, Sequence
 from copy import deepcopy
 from pathlib import Path
+from ast import literal_eval
 
 import pandas as pd
 from glom import glom, Coalesce
@@ -193,3 +194,17 @@ def job_status(log):
     """
     status = re.match("Pipeline job (failed|finished):.+", log.splitlines()[-1]).group(1)
     return status == "finished"
+
+
+def read_config(filename):
+    """Read pipeline config file
+
+    Since the pipeline configuration makes use of both tuple, and list, a
+    config file cannot be treated as a standard JSON file.  This function
+    bypasses the issue by using ast.literal_eval(..) instead.
+
+    >>> type(read_config("etc/pipeline-opts.py"))
+    <class 'dict'>
+
+    """
+    return literal_eval(Path(filename).read_text())

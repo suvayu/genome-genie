@@ -1,12 +1,12 @@
 {
-    "pipeline": [
+    "pipeline": (
         [
             "pon_sample",
             "pon_consolidate",
             "gatk"
         ],
         "muse"
-    ],
+    ),
     "module": [
         "samtools-1.9",
         "gatk-4.0.4.0",

@@ -2,7 +2,6 @@
 # coding=utf-8
 """Pipeline script"""
 
-import json
 import logging
 from argparse import ArgumentParser
 
@@ -10,7 +9,7 @@ from dask.distributed import Client, LocalCluster
 
 from genomegenie.batch.jobs import Pipeline
 from genomegenie.batch.factory import template_dir
-from genomegenie.utils import results, contents, job_status
+from genomegenie.utils import results, contents, job_status, read_config
 from genomegenie.cli import RawArgDefaultFormatter, logger_config
 
 
@@ -28,12 +27,11 @@ parser.add_argument(
 if __name__ == "__main__":
     opts = parser.parse_args()
 
-    with open(opts.options, "r") as jsonfile:
-        jobopts = json.load(jsonfile)
-        # prepend input dir to sample filenames
-        for infiles in jobopts["inputs"]:
-            for key, value in infiles.items():
-                infiles[key] = f"{jobopts['inputdir']}/{value}"
+    jobopts = read_config(opts.options)
+    # prepend input dir to sample filenames
+    for infiles in jobopts["inputs"]:
+        for key, value in infiles.items():
+            infiles[key] = f"{jobopts['inputdir']}/{value}"
 
     debug = opts.debug
     loglevel = "DEBUG" if debug else opts.log_level
