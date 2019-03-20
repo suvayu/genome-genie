@@ -4,14 +4,13 @@
 
 import json
 import logging
-from pathlib import Path
 from argparse import ArgumentParser
 
 from dask.distributed import Client, LocalCluster
 
 from genomegenie.batch.jobs import Pipeline
 from genomegenie.batch.factory import template_dir
-from genomegenie.utils import results
+from genomegenie.utils import results, contents
 from genomegenie.cli import RawArgDefaultFormatter, logger_config
 
 
@@ -24,12 +23,6 @@ parser.add_argument("-d", "--debug", action="store_true")
 parser.add_argument(
     "-t", "--template-dir", default=template_dir(), help="Template directory"
 )
-
-
-def contents(jobid, logdir):
-    matches = [i for i in Path(logdir).absolute().glob(f"*.o{jobid}")]
-    assert 1 == len(matches)
-    return matches[0].read_text()
 
 
 if __name__ == "__main__":

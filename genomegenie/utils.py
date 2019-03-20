@@ -4,6 +4,7 @@
 
 from collections import deque, Sequence
 from copy import deepcopy
+from pathlib import Path
 
 import pandas as pd
 from glom import glom, Coalesce
@@ -135,3 +136,29 @@ def add_class_property(cls, prop):
 
     _prop = property(_getter, _setter, None, f"Property {prop}")
     setattr(cls, prop, _prop)
+
+
+def contents(jobid, logdir):
+    """Read log files for a given job id, and log directory
+
+    This assumes the logfiles match the pattern '*.o<jobid>'.  It is also
+    assumed that only a single file will match the pattern.
+
+    Parameters
+    ----------
+    jobid : int or str
+        A job id to match
+
+    logdir : str
+        Log directory as a relative or absolute path.  Note, that no checks are
+        performed whether the path exists or not.
+
+    Returns
+    -------
+    str
+       Contents of the matched logfile as a string
+
+    """
+    matches = [i for i in Path(logdir).absolute().glob(f"*.o{jobid}")]
+    assert 1 == len(matches)
+    return matches[0].read_text()
