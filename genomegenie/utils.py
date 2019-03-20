@@ -1,7 +1,7 @@
 # coding=utf-8
 """Utilities"""
 
-
+import re
 from collections import deque, Sequence
 from copy import deepcopy
 from pathlib import Path
@@ -162,3 +162,34 @@ def contents(jobid, logdir):
     matches = [i for i in Path(logdir).absolute().glob(f"*.o{jobid}")]
     assert 1 == len(matches)
     return matches[0].read_text()
+
+
+def job_status(log):
+    """Return job status by parsing log files
+
+    At the end of the generated job scripts, a job status line is printed (see
+    genomegenie/batch/templates/jobscript).  This function simply looks for
+    this last line in any job output.
+
+    Parameters
+    ----------
+    log : str
+        Log contents as string
+
+    Returns
+    -------
+    bool
+        Job succeeded or not
+
+    Examples
+    --------
+    >>> log = "\\n".join(["blabla"] * 3 + ["Pipeline job failed: 2334"])
+    >>> job_status(log)
+    False
+    >>> log = "\\n".join(["blabla"] * 3 + ["Pipeline job finished: 2334"])
+    >>> job_status(log)
+    True
+
+    """
+    status = re.match("Pipeline job (failed|finished):.+", log.splitlines()[-1]).group(1)
+    return status == "finished"

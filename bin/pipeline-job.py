@@ -10,7 +10,7 @@ from dask.distributed import Client, LocalCluster
 
 from genomegenie.batch.jobs import Pipeline
 from genomegenie.batch.factory import template_dir
-from genomegenie.utils import results, contents
+from genomegenie.utils import results, contents, job_status
 from genomegenie.cli import RawArgDefaultFormatter, logger_config
 
 
@@ -60,11 +60,15 @@ if __name__ == "__main__":
     res = staged.compute()
     df = results(res, cols=["script"] if debug else ["jobid", "out", "err", "script"])
 
-    # get logs
-    df.assign(log=df.jobid.apply(get_contents, args=(jobopts["sge"]["log_directory"],)))
+    if not debug:  # get logs, find job status
+        logs = df.jobid.apply(get_contents, args=(jobopts["sge"]["log_directory"],))
+        status = logs.apply(job_status)
+        df = df.assign(log=logs, success=status)
+        summary = df["success", "jobid"].groupby("success").count()
+        logger.info("Pipeline summary:\n" + summary.to_string())
 
     df.to_parquet("pipeline-scripts.parquet")
-    logger.info("Wrote scripts to 'pipeline-scripts.parquet'")
+    logger.info("Wrote scripts and logs to 'pipeline-scripts.parquet'")
     logger.debug("Summary:\n" + df.to_string())
 
     # shutdown cluster

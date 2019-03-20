@@ -13,3 +13,11 @@ function sample_name() {
 
 # job command
 {{ job_cmd }}
+
+# NOTE: works only if exit codes are respected by the job command
+# Do not change, genomegenie.utils.job_status(..) relies on this
+if [[ $? == 0 ]]; then
+    echo Pipeline job finished: ${JOB_ID}
+else
+    echo Pipeline job failed: ${JOB_ID}
+fi
