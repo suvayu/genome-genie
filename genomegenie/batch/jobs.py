@@ -241,6 +241,7 @@ class Pipeline(object):
     @dask.delayed
     def submit(self, job, monitor_t, *args):
         """Submit and wait"""
+        notify = "Starting job %s of type: %s"
         logmsg = """
         jobid: {jobid}
 
@@ -258,12 +259,14 @@ class Pipeline(object):
         if self.debug:
             res.update(out="", err="", jobid=0)
             time.sleep(3 * np.random.rand())
+            logger.info(notify, res['jobid'], job._template)
             logger.debug(dedent(logmsg).format(**res))
             return res
 
         with self.job_file(job.script) as fn:
             res["out"], res["err"] = self._call(shlex.split(self.submit_command) + [fn])
             res["jobid"] = self._job_id_from_submit_output(res["out"])
+            logger.info(notify, res['jobid'], job._template)
             logger.debug(dedent(logmsg).format(**res))
             err = False
             while monitor_t and not err:  # not err => running
