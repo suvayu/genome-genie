@@ -66,7 +66,7 @@ if __name__ == "__main__":
     df = results(res, cols=["script"] if debug else ["jobid", "out", "err", "script"])
 
     if not debug:  # get logs, find job status
-        logs = df.jobid.apply(get_contents, args=(jobopts["sge"]["log_directory"],))
+        logs = df.jobid.apply(contents, args=(jobopts["sge"]["log_directory"],))
         status = logs.apply(job_status)
         df = df.assign(log=logs, success=status)
         summary = df["success", "jobid"].groupby("success").count()
