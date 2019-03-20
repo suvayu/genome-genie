@@ -22,6 +22,13 @@ parser.add_argument("-d", "--debug", action="store_true")
 parser.add_argument(
     "-t", "--template-dir", default=template_dir(), help="Template directory"
 )
+parser.add_argument(
+    "-w",
+    "--wait",
+    default=1800,
+    type=int,
+    help="Wait time in seconds between job status checks",
+)
 
 
 if __name__ == "__main__":
@@ -53,7 +60,7 @@ if __name__ == "__main__":
     pipeline.tmpl_dir = opts.template_dir
 
     staged = pipeline.stage(
-        pipeline.graph, pipeline.process, pipeline.submit, monitor_t=1800
+        pipeline.graph, pipeline.process, pipeline.submit, monitor_t=opts.wait
     )
     res = staged.compute()
     df = results(res, cols=["script"] if debug else ["jobid", "out", "err", "script"])
