@@ -36,6 +36,32 @@ debugging hooks, and an aggregated logging system for diagnosis.
 
 ---
 
+### Running jobs in conflicting environments
+
+By default all jobs share the same execution environment, defined by
+the top level `module` key.  This however maybe overriden on a
+per-task basis.  Say if we wanted to run two different GATK tasks but
+with different versions of GATK.  We can then duplicate a template,
+and override the loaded modules (as shown below).  Please note, since
+the keys correspond to templates, the actual template files need to be
+duplicated with the new name.
+
+```
+{
+    "pipeline": (
+        ["pon_sample", "pon_consolidate", "gatk"],
+        ["pon_sample2", "pon_consolidate2", "gatk2"],
+        "muse"
+    ),
+    "module": ["samtools-1.9", "gatk-4.0.4.0", "MuSE-1.0"],
+    "gatk": {...},
+    "gatk2": {
+        "module": ["samtools-1.9", "gatk-3"]
+        "foo": ...
+    }
+}
+```
+
 ### Note for developers
 
 Almost all parent dictionary keys in the pipeline configuration
